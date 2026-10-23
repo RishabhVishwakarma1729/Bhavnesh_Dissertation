@@ -1,0 +1,21 @@
+# environments / caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+build/
+dist/
+
+# downloaded / generated data (never committed: third-party licences, size, regenerable)
+data/
+models_cache/
+*.log
+
+# the source proposal PDF carries a student's name + enrollment number; repo is public
+*.pdf
+
+# local scratch
+.playwright-cache/
+screenshots/

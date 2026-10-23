@@ -1,0 +1,28 @@
+id,construct,text,type,options
+role,context,What best describes your role?,choice,HR / Talent acquisition executive | Recruiter / Sourcer | HR manager or head | Hiring manager (non-HR) | Other
+experience,context,How many years of experience do you have in recruitment or HR?,choice,Less than 1 year | 1-3 years | 3-5 years | 5-10 years | More than 10 years
+org_size,context,How many employees does your organisation have?,choice,1-50 | 51-250 | 251-1000 | More than 1000
+exposure,context,"How often do you use AI-based tools (resume parsing, ranking, screening chatbots) in your hiring work?",choice,Never | Rarely | Sometimes | Often | Always
+PE1,PE,AI screening reduces the time I spend shortlisting candidates.,linear_1_5,
+PE2,PE,AI screening lets me handle more applications without lowering quality.,linear_1_5,
+PE3,PE,Using AI screening shortens our time-to-hire.,linear_1_5,
+PE4,PE,AI screening reduces repetitive manual work in recruitment.,linear_1_5,
+TR1,TR,I trust candidates shortlisted by AI tools to be a good match for the role.,linear_1_5,
+TR2,TR,I would be comfortable relying on an AI ranking without re-checking every resume.,linear_1_5,
+TR3,TR,AI screening tools tend to overlook strong candidates.,linear_1_5,
+TR4,TR,AI shortlists are as reliable as those made by an experienced recruiter.,linear_1_5,
+AC1,AC,I worry that AI screening tools could be biased against certain groups of candidates.,linear_1_5,
+AC2,AC,Protecting candidate data privacy is a barrier to adopting AI screening.,linear_1_5,
+AC3,AC,Not knowing how an AI tool ranks candidates makes me reluctant to use it.,linear_1_5,
+AC4,AC,The cost or effort of setting up AI screening is a barrier for us.,linear_1_5,
+AC5,AC,Legal or compliance risks make me cautious about AI in hiring.,linear_1_5,
+PF1,PF,AI screening treats candidates more consistently than manual screening.,linear_1_5,
+PF2,PF,AI screening reduces the influence of personal bias in shortlisting.,linear_1_5,
+PF3,PF,AI screening is fair to candidates regardless of their gender.,linear_1_5,
+PF4,PF,AI screening is fair to candidates regardless of their college or educational background.,linear_1_5,
+DQ1,DQ,AI-supported shortlists improve the quality of the people we hire.,linear_1_5,
+DQ2,DQ,AI recommendations help me justify my shortlisting decisions.,linear_1_5,
+DQ3,DQ,AI screening helps me focus my time on the most promising candidates.,linear_1_5,
+AI1,AI,I intend to use (or keep using) AI screening tools in the next 12 months.,linear_1_5,
+AI2,AI,I would recommend AI screening tools to colleagues.,linear_1_5,
+AI3,AI,My organisation is likely to expand its use of AI in recruitment.,linear_1_5,

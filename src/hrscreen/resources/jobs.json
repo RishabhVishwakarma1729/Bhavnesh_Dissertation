@@ -1,0 +1,129 @@
+{
+  "_comment": "Original job descriptions written for this project. 'labels' are resume-dataset categories that count as relevant for the job; edit freely.",
+  "jobs": [
+    {
+      "id": "data-science",
+      "title": "Data Scientist",
+      "labels": [
+        "Data Science"
+      ],
+      "text": "We are hiring a Data Scientist to turn business questions into predictive models. You will clean and explore large datasets, engineer features, and build machine learning and deep learning models in Python using pandas, numpy, scikit-learn, tensorflow or pytorch. You will apply statistics and hypothesis testing, run A/B tests, build data visualizations in tableau or power bi, and present findings to stakeholders. Experience with NLP, computer vision, time series forecasting, regression, classification and clustering, plus SQL and spark, is valued. A degree in statistics, computer science or a related field is required."
+    },
+    {
+      "id": "python-developer",
+      "title": "Python Developer",
+      "labels": [
+        "Python Developer"
+      ],
+      "text": "Looking for a Python Developer to build and maintain backend services and APIs. You will write clean, tested Python code with django, flask or fastapi, design REST APIs, work with postgresql, mysql, mongodb and redis, and use celery for background jobs. Experience with docker, git, linux, unit testing with pytest, microservices and cloud platforms such as aws is expected. You will take part in code reviews, improve performance and collaborate with frontend and data teams. Strong object oriented programming fundamentals are essential."
+    },
+    {
+      "id": "java-developer",
+      "title": "Java Developer",
+      "labels": [
+        "Java Developer"
+      ],
+      "text": "We need a Java Developer to design and develop enterprise applications. You will build services with core java, spring and spring boot, use hibernate and jdbc for persistence, expose REST and soap web services, and work with mysql or oracle databases. Knowledge of j2ee, servlets, jsp, microservices, multithreading, design patterns, maven or gradle, junit and git is required. Familiarity with kafka and tomcat is a plus. You will participate in the full software development lifecycle from requirements to deployment."
+    },
+    {
+      "id": "web-designing",
+      "title": "Web Designer / Front-End Developer",
+      "labels": [
+        "Web Designing"
+      ],
+      "text": "Seeking a Web Designer to create attractive, responsive websites. You will turn mockups into pages using html5, css3, javascript, jquery and bootstrap, build interfaces with react or angular, and design wireframes and prototypes in figma, adobe xd, photoshop and illustrator. Knowledge of responsive design, cross-browser compatibility, ui and ux design principles, wordpress, sass and basic seo is required. You will work with developers and marketing to deliver polished user experiences."
+    },
+    {
+      "id": "devops-engineer",
+      "title": "DevOps Engineer",
+      "labels": [
+        "DevOps",
+        "DevOps Engineer"
+      ],
+      "text": "We are looking for a DevOps Engineer to automate build, release and infrastructure workflows. You will create ci/cd pipelines with jenkins or gitlab ci, containerise services with docker and orchestrate them on kubernetes, manage infrastructure as code with terraform and ansible, and operate workloads on aws, azure or gcp. You will set up monitoring and alerting with prometheus and grafana, write bash and python scripts, administer linux servers and nginx, and help teams ship reliably."
+    },
+    {
+      "id": "database",
+      "title": "Database Developer / Administrator",
+      "labels": [
+        "Database",
+        "SQL Developer"
+      ],
+      "text": "Hiring a Database Professional to design, tune and secure relational databases. You will write complex sql, stored procedures and pl/sql or t-sql code, optimise queries and indexing, perform performance tuning, backup and recovery, replication and high availability setup, and manage mysql, oracle, postgresql or sql server instances. Knowledge of data modeling, normalization, nosql stores such as mongodb or cassandra, and database security is required. Experience in database administration is expected."
+    },
+    {
+      "id": "hr",
+      "title": "HR Executive",
+      "labels": [
+        "Human Resources",
+        "HR"
+      ],
+      "text": "We are seeking an HR Executive to support the full employee lifecycle. Responsibilities include recruitment and talent acquisition, sourcing and interviewing, onboarding and induction, payroll coordination, performance management, employee engagement and employee relations including grievance handling. You will maintain hr policies, ensure statutory compliance with labour law, manage the hris, run hr analytics on attrition and support training and development programmes. Strong communication skills and a degree in human resources or business administration are required."
+    },
+    {
+      "id": "sales",
+      "title": "Sales Executive",
+      "labels": [
+        "Sales"
+      ],
+      "text": "Looking for a Sales Executive to grow revenue and build lasting client relationships. You will generate leads through cold calling and networking, manage the sales pipeline in a crm such as salesforce, negotiate and close deals, achieve monthly targets, and handle key account management and customer retention. Experience in b2b or b2c sales, sales forecasting, market research and delivering presentations is expected. Excellent communication and negotiation skills are essential."
+    },
+    {
+      "id": "business-analyst",
+      "title": "Business Analyst",
+      "labels": [
+        "Business Analyst"
+      ],
+      "text": "We need a Business Analyst to bridge business and technology teams. You will conduct requirements gathering workshops, write brd and frd documents, user stories and use cases, create process maps and wireframes, perform gap analysis, and support uat. You will work in agile and scrum teams using jira and confluence, analyse data with sql, excel, power bi or tableau, and manage stakeholders. Strong analytical and documentation skills are required."
+    },
+    {
+      "id": "civil-engineer",
+      "title": "Civil Engineer",
+      "labels": [
+        "Civil Engineer"
+      ],
+      "text": "Hiring a Civil Engineer for building and infrastructure projects. You will prepare drawings in autocad and revit, carry out structural analysis with staad pro or etabs, handle estimation and costing, quantity surveying, boq and billing, supervise site execution and quality control, and plan work with primavera or ms project. Knowledge of rcc design, concrete technology, surveying, building codes and contract administration is expected. A degree in civil engineering is required."
+    },
+    {
+      "id": "mechanical-engineer",
+      "title": "Mechanical Engineer",
+      "labels": [
+        "Mechanical Engineer"
+      ],
+      "text": "We are looking for a Mechanical Engineer to design, build and maintain mechanical systems. You will create 3d models and drawings in solidworks, catia, creo or autocad, run fea and cfd simulations in ansys, apply gd&t, support manufacturing with cnc and production planning, and drive continuous improvement through lean manufacturing, six sigma, kaizen and root cause analysis. Knowledge of thermodynamics, fluid mechanics, heat transfer, hvac, maintenance and iso 9001 quality systems is required."
+    },
+    {
+      "id": "electrical-engineering",
+      "title": "Electrical Engineer",
+      "labels": [
+        "Electrical Engineering"
+      ],
+      "text": "Seeking an Electrical Engineer for design, commissioning and maintenance of electrical systems. You will work on power systems, switchgear, transformers, motors and vfd drives, program plc and scada systems with hmi panels, design circuits and pcb layouts, and carry out load calculations, protection relay settings and substation maintenance. Experience with matlab, autocad electrical, control systems, instrumentation and embedded or microcontroller based systems is valued."
+    },
+    {
+      "id": "network-security-engineer",
+      "title": "Network Security Engineer",
+      "labels": [
+        "Network Security Engineer"
+      ],
+      "text": "We are hiring a Network Security Engineer to protect and operate our network. You will configure and monitor firewalls from palo alto, fortinet, checkpoint and cisco, manage vpn, ids and ips, perform vulnerability assessment and penetration testing, analyse alerts in a siem such as splunk, respond to incidents, and maintain routing and switching with tcp/ip, vlan, dns and load balancers. Certifications such as ccna or ccnp and knowledge of iso 27001 are an advantage."
+    },
+    {
+      "id": "testing",
+      "title": "QA / Software Test Engineer",
+      "labels": [
+        "Testing",
+        "Automation Testing"
+      ],
+      "text": "Looking for a Software Test Engineer to ensure product quality. You will write test plans and test cases, perform manual testing, functional, regression, smoke and sanity testing, automate tests with selenium, testng, cucumber, cypress or appium, test APIs with postman, run load and performance testing with jmeter, and track defects in jira. Understanding of sdlc, stlc, bdd and agile processes is required."
+    },
+    {
+      "id": "etl-developer",
+      "title": "ETL Developer",
+      "labels": [
+        "ETL Developer"
+      ],
+      "text": "We need an ETL Developer to build data integration pipelines for our data warehouse. You will design and develop etl jobs with informatica, talend, ssis or datastage, write complex sql and pl/sql, model data for olap reporting, migrate data, and ensure data quality. Experience with hadoop, hive, spark, airflow, kafka, snowflake or redshift, unix shell scripting and python is valued. You will schedule, monitor and tune data loads."
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "_comment": "Skill lexicon. Each entry is 'canonical' or 'canonical|alias|alias'. Keys of 'domains' match the job ids in jobs.json (plus 'general'). Matching is case-insensitive with word boundaries.",
+  "domains": {
+    "data-science": [
+      "python", "machine learning|ml", "deep learning", "statistics", "pandas", "numpy",
+      "scikit-learn|sklearn", "tensorflow", "keras", "pytorch", "natural language processing|nlp",
+      "computer vision", "data visualization|data visualisation", "tableau", "power bi|powerbi",
+      "matplotlib", "seaborn", "xgboost", "feature engineering", "regression", "classification",
+      "clustering", "time series", "hypothesis testing", "a/b testing", "jupyter", "spark|pyspark",
+      "sql", "r programming", "statistical modeling|statistical modelling", "data analysis",
+      "neural networks|neural network", "opencv", "nltk", "spacy", "predictive modeling|predictive modelling",
+      "data mining", "model deployment", "random forest", "data cleaning"
+    ],
+    "python-developer": [
+      "python", "django", "flask", "fastapi", "rest api|restful api|rest apis|restful apis", "sqlalchemy",
+      "celery", "pytest", "unit testing", "docker", "git", "postgresql|postgres", "mysql", "mongodb",
+      "redis", "aws", "linux", "asyncio", "microservices", "object oriented programming|oop",
+      "jenkins", "web scraping", "beautifulsoup", "selenium", "numpy", "pandas"
+    ],
+    "java-developer": [
+      "java", "spring framework|spring", "spring boot", "hibernate", "jsp", "servlets|servlet",
+      "maven", "junit", "j2ee|jee", "microservices", "rest api|restful api|rest apis|restful apis",
+      "mysql", "oracle", "jdbc", "struts", "tomcat", "eclipse", "git", "multithreading", "kafka",
+      "design patterns", "gradle", "jenkins", "soap", "web services"
+    ],
+    "web-designing": [
+      "html|html5", "css|css3", "javascript", "jquery", "bootstrap", "react|reactjs|react.js",
+      "angular|angularjs", "photoshop", "adobe xd", "figma", "responsive design", "ui design",
+      "ux design", "wordpress", "sass", "typescript", "node.js|nodejs", "php", "seo", "illustrator",
+      "wireframing|wireframes", "web design", "cross-browser compatibility", "vue.js|vuejs", "prototyping"
+    ],
+    "devops-engineer": [
+      "docker", "kubernetes|k8s", "jenkins", "terraform", "ansible", "aws", "azure",
+      "gcp|google cloud", "ci/cd|cicd", "git", "linux", "bash|shell scripting", "prometheus",
+      "grafana", "nginx", "helm", "puppet", "chef", "monitoring", "infrastructure as code|iac",
+      "cloudformation", "gitlab ci", "python", "elk stack|elk", "nagios", "load balancing"
+    ],
+    "database": [
+      "sql", "mysql", "oracle", "postgresql|postgres", "sql server|mssql", "mongodb", "pl/sql|plsql",
+      "t-sql|tsql", "database administration|dba", "performance tuning", "backup and recovery",
+      "indexing", "stored procedures|stored procedure", "replication", "data modeling|data modelling",
+      "normalization", "nosql", "query optimization|query optimisation", "db2", "cassandra", "redis",
+      "high availability", "database security", "log shipping", "mirroring"
+    ],
+    "hr": [
+      "recruitment", "talent acquisition", "onboarding", "payroll", "employee engagement",
+      "performance management", "hris", "hr policies", "labor law|labour law",
+      "compensation and benefits|c&b", "training and development", "employee relations", "sourcing",
+      "interviewing", "hr analytics", "attrition", "statutory compliance", "induction",
+      "grievance handling", "workforce planning", "applicant tracking system|ats", "exit interviews",
+      "job descriptions", "hr operations", "campus hiring"
+    ],
+    "sales": [
+      "sales", "lead generation", "business development", "crm", "salesforce", "negotiation",
+      "client relationship management|client relationship", "cold calling", "account management",
+      "b2b", "b2c", "revenue growth", "sales forecasting", "target achievement", "market research",
+      "channel sales", "customer retention", "upselling", "pipeline management", "presentations",
+      "key account management", "territory management", "customer acquisition", "retail sales"
+    ],
+    "business-analyst": [
+      "requirements gathering", "business analysis", "use cases|use case", "user stories|user story",
+      "brd|business requirement document", "frd", "uml", "jira", "confluence", "stakeholder management",
+      "process mapping", "gap analysis", "sql", "agile", "scrum", "wireframes", "uat|user acceptance testing",
+      "swot", "data analysis", "power bi", "tableau", "excel", "visio", "bpmn", "process improvement"
+    ],
+    "civil-engineer": [
+      "autocad", "staad pro|staad.pro", "revit", "site supervision", "quantity surveying",
+      "estimation and costing|estimating and costing", "structural analysis", "construction management",
+      "surveying", "concrete", "rcc design|rcc", "primavera", "ms project|microsoft project", "billing",
+      "project planning", "building codes|is codes", "geotechnical", "site execution", "boq", "contracts",
+      "quality control", "project management", "etabs", "road construction", "bar bending schedule"
+    ],
+    "mechanical-engineer": [
+      "autocad", "solidworks", "catia", "ansys", "cad", "cam", "cnc", "thermodynamics",
+      "fluid mechanics", "heat transfer", "hvac", "manufacturing", "gd&t", "six sigma",
+      "lean manufacturing", "quality assurance", "maintenance", "creo|pro-e|proe", "fea", "cfd",
+      "piping", "3d printing", "production planning", "machine design", "iso 9001", "fmea", "kaizen",
+      "root cause analysis"
+    ],
+    "electrical-engineering": [
+      "plc", "scada", "matlab", "power systems", "circuit design", "autocad electrical|autocad",
+      "embedded systems", "microcontrollers|microcontroller", "pcb design", "transformers", "switchgear",
+      "motors", "vfd|variable frequency drives", "protection relays", "power electronics",
+      "electrical maintenance", "load calculation", "control systems", "instrumentation", "hmi",
+      "wiring", "substation", "renewable energy", "etap", "proteus"
+    ],
+    "network-security-engineer": [
+      "firewall|firewalls", "vpn", "ids/ips|ids|ips", "cisco", "palo alto", "fortinet", "checkpoint",
+      "siem", "splunk", "penetration testing|pentesting", "vulnerability assessment", "tcp/ip",
+      "routing", "switching", "ccna", "ccnp", "network security", "wireshark", "nessus",
+      "endpoint security", "iso 27001", "incident response", "lan|wan", "load balancer", "dns", "vlan",
+      "nmap", "threat analysis"
+    ],
+    "testing": [
+      "manual testing", "test cases|test case", "test plans|test plan", "bug tracking", "jira",
+      "selenium", "test automation|automation testing", "regression testing", "functional testing",
+      "api testing", "postman", "jmeter", "performance testing", "testng", "junit", "cucumber",
+      "defect management|defect tracking", "sdlc", "stlc", "qa", "uat", "appium", "cypress", "bdd",
+      "smoke testing", "sanity testing", "load testing", "mobile testing"
+    ],
+    "etl-developer": [
+      "etl", "informatica", "talend", "ssis", "datastage", "data warehouse|data warehousing|dwh", "sql",
+      "pl/sql|plsql", "oracle", "data integration", "hadoop", "hive", "spark", "pig", "sqoop", "airflow",
+      "kafka", "python", "data modeling|data modelling", "olap", "snowflake", "redshift",
+      "unix shell scripting|shell scripting", "data migration", "data quality", "pentaho"
+    ],
+    "general": [
+      "communication", "teamwork", "leadership", "problem solving", "time management",
+      "ms excel|excel|advanced excel", "ms office|microsoft office", "ms word", "powerpoint",
+      "project management", "analytical skills", "critical thinking", "presentation skills",
+      "team management", "documentation", "english"
+    ]
+  }
+}
