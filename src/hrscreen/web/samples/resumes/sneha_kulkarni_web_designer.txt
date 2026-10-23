@@ -1,0 +1,17 @@
+Sneha Kulkarni
+Web Designer | sneha.kulkarni@example.com | +91 90000 00005
+# Summary
+Web designer with 3 years of experience creating responsive, accessible websites for small businesses.
+# Skills
+HTML5, CSS3, JavaScript, React, Bootstrap, Figma, Adobe XD, Photoshop, Illustrator, responsive design, UI design, UX design, WordPress, SEO, wireframing
+# Experience
+Web Designer, Pixel Harbour Studio (2022 - present)
+- Designed wireframes and prototypes in Figma and Adobe XD and built them with HTML5, CSS3 and React.
+- Made sites responsive with Bootstrap and tested them across browsers.
+- Improved page speed and basic SEO for WordPress clients.
+Design Intern, Brightside Media (2021 - 2022)
+- Produced banners and layouts in Photoshop and Illustrator.
+# Education
+Diploma in Graphic Design, 2021
+
+(Sample resume: a fictional person, made up to test the screening tool.)

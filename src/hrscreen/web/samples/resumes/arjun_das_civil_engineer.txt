@@ -1,0 +1,17 @@
+Arjun Das
+Civil Engineer | arjun.das@example.com | +91 90000 00009
+# Summary
+Civil engineer with 8 years of experience on residential and commercial building projects.
+# Skills
+AutoCAD, Revit, STAAD Pro, structural analysis, RCC design, site supervision, quantity surveying, estimation and costing, BOQ, billing, Primavera, quality control, project planning, concrete
+# Experience
+Site Engineer, Keystone Constructions (2019 - present)
+- Supervised site execution and quality control for a 12 storey building.
+- Prepared BOQ, estimation and costing, and monthly billing.
+- Planned the schedule in Primavera.
+Junior Engineer, Granite Builders (2016 - 2019)
+- Prepared drawings in AutoCAD and checked RCC designs with STAAD Pro.
+# Education
+B.Tech in Civil Engineering, 2016
+
+(Sample resume: a fictional person, made up to test the screening tool.)

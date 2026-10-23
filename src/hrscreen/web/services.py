@@ -9,6 +9,7 @@ import io
 import json
 import re
 import shutil
+import zipfile
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -129,6 +130,36 @@ def run_screening(*, job_title: str, jd_text: str, model: str, uploads: list[Upl
         rows += [Candidate(run=run, label=u.label, error=u.error) for u in uploads if u.error]
         Candidate.objects.bulk_create(rows)
     return run
+
+
+SAMPLES_DIR = Path(__file__).parent / "samples" / "resumes"
+
+
+def sample_resumes() -> list[dict]:
+    """The fictional sample resumes shipped with the app (one per job, plus one blank PDF)."""
+    if not SAMPLES_DIR.exists():
+        return []
+    return [{"name": p.name, "size": p.stat().st_size} for p in sorted(SAMPLES_DIR.iterdir())
+            if p.is_file() and p.suffix.lower() in SUPPORTED_SUFFIXES]
+
+
+def sample_resume_path(name: str) -> Path | None:
+    """Path of a sample file, but only if ``name`` is exactly one of the shipped files (blocks ../ tricks)."""
+    return SAMPLES_DIR / name if name in {s["name"] for s in sample_resumes()} else None
+
+
+def sample_resumes_zip() -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for s in sample_resumes():
+            zf.write(SAMPLES_DIR / s["name"], s["name"])
+    return buffer.getvalue()
+
+
+def sample_survey_csv() -> bytes:
+    """A Google-Forms-style export of 80 SYNTHETIC responses. The is_synthetic column is kept on purpose so
+    the analysis stamps its output as synthetic even though it arrives as an ordinary upload."""
+    return make_synthetic_responses(80, seed=1, form_style=True).to_csv(index=False).encode("utf-8")
 
 
 def job_catalogue() -> list[dict]:
@@ -296,8 +327,7 @@ def analyze_survey(data: bytes, source_name: str) -> SurveyRun:
 
 
 def analyze_demo_survey() -> SurveyRun:
-    df = make_synthetic_responses(80, seed=1, form_style=True)
-    return analyze_survey(df.to_csv(index=False).encode("utf-8"), "SYNTHETIC demo responses")
+    return analyze_survey(sample_survey_csv(), "SYNTHETIC demo responses")
 
 
 def delete_survey_files(run_id: int) -> None:

@@ -62,6 +62,17 @@ hrscreen web --debug --port 8610
 | Questionnaire | The 23-item survey, ready to copy into Google Forms. |
 | Method & limits | What a score means and what the results cannot tell you. |
 
+Trying it without your own files: both upload pages have a **Load sample resumes** / **Load sample responses** button that attaches
+ready-made files to the upload field exactly like a real upload (then press Rank / Analyse), plus a **Download** link for testing the
+browser's own file picker.
+
+* The 10 sample resumes are fictional people in PDF, DOCX and TXT, one per job, plus one blank PDF that shows how an unreadable file
+  is reported. They live in `src/hrscreen/web/samples/resumes/`; rebuild them with `python scripts/build_sample_resumes.py`
+  (needs `pymupdf`).
+* The sample survey is 80 synthetic responses in Google Forms format. It keeps its synthetic marker, so the results are stamped
+  SYNTHETIC even though it arrives as a normal upload.
+* A file you attach always wins over the "use synthetic demo" tick-boxes.
+
 Design choices worth knowing:
 
 * **Privacy.** Resume text is never stored. A run keeps only each candidate's file name, score and parsed attributes; deleting a run
@@ -184,6 +195,7 @@ src/hrscreen/
   cli.py        command line
   resources/    skills.json, jobs.json (edit these)
 kaggle/         bundle builder + offline GPU kernel script
+scripts/        build_sample_resumes.py (regenerates the web UI's sample files)
 tests/          pytest suite (python -m pytest -m "not slow")
 docs/           METHODOLOGY.md, questionnaire.md/.csv
 results/        committed benchmark and fairness outputs for the real dataset

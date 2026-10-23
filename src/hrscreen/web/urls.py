@@ -19,4 +19,7 @@ urlpatterns = [
     path("questionnaire/", views.questionnaire, name="questionnaire"),
     path("questionnaire/download/<str:fmt>/", views.questionnaire_download, name="questionnaire_download"),
     path("about/", views.about, name="about"),
+    path("samples/resumes/<str:name>", views.sample_resume, name="sample_resume"),
+    path("samples/resumes.zip", views.sample_resumes_zip, name="sample_resumes_zip"),
+    path("samples/survey-responses.csv", views.sample_survey, name="sample_survey"),
 ]

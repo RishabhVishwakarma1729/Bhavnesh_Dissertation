@@ -36,8 +36,16 @@
         <input type="file" id="resumes" name="resumes" multiple accept=".pdf,.docx,.txt,.md">
         <span class="help" id="file-summary">PDF, DOCX or TXT. Up to {{ max_resumes }} files, {{ max_mb }} MB each.</span>
       </div>
+      <div class="sample-box">
+        <div class="row">
+          <button type="button" class="btn" id="load-samples" hidden>Load {{ samples|length }} sample resumes</button>
+          <a class="btn" href="{% url 'sample_resumes_zip' %}">Download samples (.zip)</a>
+        </div>
+        <span class="help">Fictional people in PDF, DOCX and TXT, one per job, plus one blank PDF that shows how an unreadable file is
+          reported. <strong>Load</strong> attaches them just like a real upload; then press Rank.</span>
+      </div>
       <label class="check"><input type="checkbox" name="demo" {% if form.demo %}checked{% endif %}>
-        <span>No files? Use 60 <strong>synthetic</strong> demo resumes<br><span class="help">Generated from templates, not real people.</span></span></label>
+        <span>No files? Use 60 <strong>synthetic</strong> demo resumes<br><span class="help">Generated from templates, not real people. Ignored if you attach files.</span></span></label>
 
       <fieldset style="border:0;padding:0;margin:0" class="stack">
         <legend class="label" style="padding:0 0 6px">Ranking model</legend>
@@ -53,6 +61,7 @@
 </form>
 
 {{ jobs|json_script:"jobs-data" }}
+{{ samples|json_script:"samples-data" }}
 {% endblock %}
 {% block scripts %}
 <script>
@@ -68,11 +77,37 @@
     select.addEventListener("change", function () { sync(true); });
     sync(false);
     var files = document.getElementById("resumes"), summary = document.getElementById("file-summary"), original = summary.textContent;
-    files.addEventListener("change", function () {
+    function describe() {
       if (!files.files.length) { summary.textContent = original; return; }
+      var names = Array.prototype.map.call(files.files, function (f) { return f.name; });
       var bytes = Array.prototype.reduce.call(files.files, function (n, f) { return n + f.size; }, 0);
-      summary.textContent = files.files.length + " file" + (files.files.length === 1 ? "" : "s") + " selected (" + (bytes / 1048576).toFixed(1) + " MB)";
-    });
+      summary.textContent = files.files.length + " file" + (files.files.length === 1 ? "" : "s") + " selected (" + (bytes / 1048576).toFixed(1) + " MB): " +
+        names.slice(0, 4).join(", ") + (names.length > 4 ? ", and " + (names.length - 4) + " more" : "");
+    }
+    files.addEventListener("change", describe);
+
+    // "Load sample resumes": fetch the shipped files and attach them to the file input, as if the user had picked them.
+    var samples = JSON.parse(document.getElementById("samples-data").textContent), load = document.getElementById("load-samples");
+    if (window.DataTransfer && window.fetch && samples.length) {
+      load.hidden = false;
+      load.addEventListener("click", async function () {
+        var label = load.textContent; load.disabled = true; load.textContent = "Loading…";
+        try {
+          var transfer = new DataTransfer();
+          for (var i = 0; i < samples.length; i++) {
+            var response = await fetch(samples[i].url);
+            if (!response.ok) throw new Error(samples[i].name);
+            var blob = await response.blob();
+            transfer.items.add(new File([blob], samples[i].name, { type: blob.type }));
+          }
+          files.files = transfer.files;
+          document.querySelector("input[name=demo]").checked = false;   // attached files win over the demo box
+          describe();
+        } catch (err) {
+          summary.textContent = "Could not attach the samples (" + err.message + "). Use the .zip download, or tick the demo box.";
+        } finally { load.disabled = false; load.textContent = label; }
+      });
+    }
   })();
 </script>
 {% endblock %}

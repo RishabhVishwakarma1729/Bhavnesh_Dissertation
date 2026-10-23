@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 import csv
+import mimetypes
 
 from django.conf import settings
 from django.contrib import messages
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from hrscreen.survey import questionnaire as q
 
 from . import services
 from .models import ScreeningRun, SurveyRun
+
+
+SAMPLE_SURVEY_NAME = "sample_survey_responses_SYNTHETIC.csv"
 
 
 # ---------------------------------------------------------------------------------- home / about
@@ -41,7 +46,8 @@ def about(request):
 def _screen_context(request, **extra):
     return {"nav": "screen", "jobs": services.job_catalogue(), "models": services.available_models(),
             "max_resumes": settings.MAX_RESUMES, "max_embedding": settings.MAX_EMBEDDING_RESUMES,
-            "max_mb": settings.MAX_RESUME_BYTES // (1024 * 1024), **extra}
+            "max_mb": settings.MAX_RESUME_BYTES // (1024 * 1024),
+            "samples": [{**s, "url": reverse("sample_resume", args=[s["name"]])} for s in services.sample_resumes()], **extra}
 
 
 @require_http_methods(["GET", "POST"])
@@ -53,7 +59,7 @@ def screen(request):
 
     form = {"job": request.POST.get("job", "custom"), "jd_text": request.POST.get("jd_text", "").strip(),
             "job_title": request.POST.get("job_title", "").strip(), "model": request.POST.get("model", "tfidf"),
-            "demo": request.POST.get("demo") == "on"}
+            "demo": request.POST.get("demo") == "on" and not request.FILES.getlist("resumes")}   # files win over the demo box
     catalogue = {j["id"]: j for j in services.job_catalogue()}
     if form["job"] in catalogue:
         base = catalogue[form["job"]]
@@ -146,17 +152,18 @@ def fairness(request):
 
 @require_http_methods(["GET", "POST"])
 def survey(request):
-    ctx = {"nav": "survey", "runs": SurveyRun.objects.all()[:10], "max_mb": settings.MAX_SURVEY_BYTES // (1024 * 1024)}
+    ctx = {"nav": "survey", "runs": SurveyRun.objects.all()[:10], "max_mb": settings.MAX_SURVEY_BYTES // (1024 * 1024),
+           "sample_survey_name": SAMPLE_SURVEY_NAME}
     if request.method == "GET":
         return render(request, "hrscreen_web/survey.html", ctx)
     try:
-        if request.POST.get("demo") == "on":
+        upload = request.FILES.get("responses")
+        if upload:                                           # a chosen file always wins over the demo box
+            run = services.analyze_survey(upload.read(), upload.name)
+        elif request.POST.get("demo") == "on":
             run = services.analyze_demo_survey()
         else:
-            upload = request.FILES.get("responses")
-            if not upload:
-                raise services.UserError("Choose the Google Forms CSV export, or tick the demo option.")
-            run = services.analyze_survey(upload.read(), upload.name)
+            raise services.UserError("Choose the Google Forms CSV export, or tick the demo option.")
     except services.UserError as exc:
         return render(request, "hrscreen_web/survey.html", {**ctx, "error": str(exc)}, status=400)
     messages.success(request, f"Analysed {run.n_responses} responses.")
@@ -228,3 +235,28 @@ def questionnaire_download(request, fmt):
         writer.writerows(rows)
         return response
     raise Http404
+
+
+# ---------------------------------------------------------------------------------- sample files for testing the upload forms
+
+@require_GET
+def sample_resume(request, name):
+    path = services.sample_resume_path(name)
+    if path is None:
+        raise Http404("No such sample")
+    content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    return FileResponse(open(path, "rb"), content_type=content_type, filename=path.name)
+
+
+@require_GET
+def sample_resumes_zip(request):
+    response = HttpResponse(services.sample_resumes_zip(), content_type="application/zip")
+    response["Content-Disposition"] = 'attachment; filename="sample_resumes.zip"'
+    return response
+
+
+@require_GET
+def sample_survey(request):
+    response = HttpResponse(services.sample_survey_csv(), content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{SAMPLE_SURVEY_NAME}"'
+    return response

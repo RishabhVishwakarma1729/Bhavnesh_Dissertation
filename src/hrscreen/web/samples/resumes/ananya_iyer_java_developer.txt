@@ -1,0 +1,17 @@
+Ananya Iyer
+Java Developer | ananya.iyer@example.com | +91 90000 00003
+# Summary
+Java developer with 7 years of experience in enterprise applications and microservices.
+# Skills
+Java, Spring Boot, Spring Framework, Hibernate, JDBC, microservices, REST API, Kafka, MySQL, Oracle, JUnit, Maven, Jenkins, Git, multithreading, design patterns
+# Experience
+Senior Java Developer, Harbor Financial Systems (2020 - present)
+- Designed Spring Boot microservices for loan processing and exposed REST APIs.
+- Introduced Kafka for event streaming and improved throughput with multithreading.
+- Wrote JUnit tests and automated builds with Maven and Jenkins.
+Java Developer, Lotus Infotech (2017 - 2020)
+- Built Hibernate based data layers on Oracle and MySQL.
+# Education
+B.Tech in Information Technology, 2017
+
+(Sample resume: a fictional person, made up to test the screening tool.)

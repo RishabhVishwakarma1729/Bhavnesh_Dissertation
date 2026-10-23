@@ -37,7 +37,7 @@ hrscreen = "hrscreen.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-hrscreen = ["resources/*.json", "web/templates/hrscreen_web/*"]
+hrscreen = ["resources/*.json", "web/templates/hrscreen_web/*", "web/samples/resumes/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

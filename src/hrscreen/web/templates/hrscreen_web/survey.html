@@ -12,10 +12,18 @@
   <div class="field">
     <label for="responses">Google Forms CSV export</label>
     <input type="file" id="responses" name="responses" accept=".csv,text/csv">
-    <span class="help">Responses are analysed in memory; only the results are saved. Maximum {{ max_mb }} MB.</span>
+    <span class="help" id="file-summary">Responses are analysed in memory; only the results are saved. Maximum {{ max_mb }} MB.</span>
+  </div>
+  <div class="sample-box">
+    <div class="row">
+      <button type="button" class="btn" id="load-sample-csv" hidden>Load sample responses</button>
+      <a class="btn" href="{% url 'sample_survey' %}">Download sample CSV</a>
+    </div>
+    <span class="help">80 <strong>synthetic</strong> responses in Google Forms format (<span class="mono">{{ sample_survey_name }}</span>).
+      <strong>Load</strong> attaches the file like a real upload; results from it are stamped SYNTHETIC.</span>
   </div>
   <label class="check"><input type="checkbox" name="demo"><span>No data yet? Analyse 80 <strong>synthetic</strong> demo responses<br>
-    <span class="help">Relationships are planted on purpose to test the pipeline. They are not findings.</span></span></label>
+    <span class="help">Relationships are planted on purpose to test the pipeline. They are not findings. Ignored if you choose a file.</span></span></label>
   <div><button class="btn primary" type="submit">Analyse</button></div>
 </form>
 
@@ -28,4 +36,32 @@
     <td class="num">{{ r.n_responses }}</td><td><a href="{% url 'survey_detail' r.id %}">Open</a></td></tr>{% endfor %}</tbody>
 </table></div>
 {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var input = document.getElementById("responses"), summary = document.getElementById("file-summary"), original = summary.textContent;
+    var load = document.getElementById("load-sample-csv");
+    input.addEventListener("change", function () {
+      summary.textContent = input.files.length ? input.files[0].name + " selected (" + (input.files[0].size / 1024).toFixed(0) + " KB)" : original;
+    });
+    if (window.DataTransfer && window.fetch) {
+      load.hidden = false;
+      load.addEventListener("click", async function () {
+        var label = load.textContent; load.disabled = true; load.textContent = "Loading…";
+        try {
+          var response = await fetch("{% url 'sample_survey' %}");
+          if (!response.ok) throw new Error("download failed");
+          var transfer = new DataTransfer();
+          transfer.items.add(new File([await response.blob()], "{{ sample_survey_name }}", { type: "text/csv" }));
+          input.files = transfer.files;
+          document.querySelector("input[name=demo]").checked = false;
+          input.dispatchEvent(new Event("change"));
+        } catch (err) {
+          summary.textContent = "Could not attach the sample (" + err.message + "). Use the download link, or tick the demo box.";
+        } finally { load.disabled = false; load.textContent = label; }
+      });
+    }
+  })();
+</script>
 {% endblock %}

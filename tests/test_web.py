@@ -310,3 +310,85 @@ def test_fairness_glance_shows_compact_name_swap_and_orders_models(client, setti
     assert "of decisions flip" in glance and "favour female-coded" in glance
     assert glance.index("tfidf") < glance.index("embeddings") < glance.index("xgboost+emb")   # simplest model first
     assert "0.795" in glance                                                                    # three decimals, so a near-miss is visible
+
+
+# ------------------------------------------------------------------ sample files for the upload forms
+
+BEST_SAMPLE_FOR_JOB = {
+    "data-science": "priya_nair_data_scientist.pdf", "python-developer": "rohan_mehta_python_developer.docx",
+    "java-developer": "ananya_iyer_java_developer.txt", "devops-engineer": "karan_malhotra_devops_engineer.pdf",
+    "web-designing": "sneha_kulkarni_web_designer.txt", "hr": "farah_khan_hr_executive.docx",
+    "sales": "vikram_singh_sales_executive.txt", "business-analyst": "deepa_reddy_business_analyst.docx",
+    "civil-engineer": "arjun_das_civil_engineer.txt",
+}
+
+
+def sample_uploads():
+    return [upload(s["name"], (services.SAMPLES_DIR / s["name"]).read_bytes()) for s in services.sample_resumes()]
+
+
+def test_sample_resumes_are_shipped_in_three_formats_with_one_unreadable():
+    names = [s["name"] for s in services.sample_resumes()]
+    assert len(names) == 10 and {n.rsplit(".", 1)[1] for n in names} == {"pdf", "docx", "txt"}
+    read = services.read_uploads(sample_uploads())
+    unreadable = [u for u in read if u.error]
+    assert [u.label for u in unreadable] == ["blank_scan_unreadable.pdf"] and "No text" in unreadable[0].error
+    assert len([u for u in read if not u.error]) == 9
+
+
+@pytest.mark.parametrize("job_id,expected", sorted(BEST_SAMPLE_FOR_JOB.items()))
+def test_each_sample_resume_is_the_best_match_for_its_own_job(client, job_id, expected):
+    """The samples are only useful for testing if the ranking they produce makes sense."""
+    jd = next(j for j in services.job_catalogue() if j["id"] == job_id)
+    response = client.post(reverse("screen"), {"job": job_id, "jd_text": jd["text"], "model": "tfidf", "resumes": sample_uploads()})
+    assert response.status_code == 302
+    run = ScreeningRun.objects.get()
+    assert run.ranked[0].label == expected, [(c.label, round(c.score, 3)) for c in run.ranked[:3]]
+    assert run.unreadable.count() == 1                                   # the blank PDF is reported, not fatal
+
+
+def test_sample_endpoints_serve_only_the_shipped_files(client):
+    for s in services.sample_resumes():
+        response = client.get(reverse("sample_resume", args=[s["name"]]))
+        assert response.status_code == 200 and b"".join(response.streaming_content) == (services.SAMPLES_DIR / s["name"]).read_bytes()
+    assert client.get(reverse("sample_resume", args=["priya_nair_data_scientist.pdf"]))["Content-Type"] == "application/pdf"
+    for hostile in ("..%2F..%2Fsettings.py", "%2e%2e/%2e%2e/secret_key.txt", r"..\..\x", "nope.pdf", ".gitignore", "samples"):
+        assert client.get("/samples/resumes/" + hostile).status_code == 404, hostile
+
+
+def test_sample_zip_and_sample_survey_downloads(client):
+    import io
+    import zipfile
+
+    zipped = client.get(reverse("sample_resumes_zip"))
+    assert zipped["Content-Disposition"].startswith("attachment")
+    assert sorted(zipfile.ZipFile(io.BytesIO(zipped.content)).namelist()) == sorted(s["name"] for s in services.sample_resumes())
+    survey_csv = client.get(reverse("sample_survey"))
+    assert survey_csv["Content-Type"].startswith("text/csv") and "SYNTHETIC" in survey_csv["Content-Disposition"]
+    assert survey_csv.content.count(b"\n") == 81 and b"is_synthetic" in survey_csv.content.splitlines()[0]
+
+
+def test_sample_survey_goes_through_the_normal_upload_and_stays_flagged(client, tmp_path, settings):
+    settings.DATA_DIR = tmp_path
+    response = client.post(reverse("survey"), {"responses": upload("sample_survey_responses_SYNTHETIC.csv", services.sample_survey_csv())})
+    assert response.status_code == 302
+    run = SurveyRun.objects.get()
+    assert run.is_synthetic and run.source_name == "sample_survey_responses_SYNTHETIC.csv" and run.n_responses == 80
+    assert b"SYNTHETIC DATA" in client.get(response["Location"]).content
+
+
+def test_attached_files_win_over_the_demo_checkbox(client, tmp_path, settings):
+    post_screen(client, [upload("ds.txt", DS), upload("hr.txt", HR)], demo="on")
+    run = ScreeningRun.objects.get()
+    assert not run.is_demo and run.ranked.count() == 2                  # the two attached files, not 60 synthetic ones
+    settings.DATA_DIR = tmp_path
+    client.post(reverse("survey"), {"demo": "on", "responses": upload("mine.csv", services.sample_survey_csv())})
+    assert SurveyRun.objects.get().source_name == "mine.csv"
+
+
+def test_upload_pages_offer_the_sample_controls(client):
+    screen = client.get(reverse("screen")).content.decode()
+    assert 'id="load-samples"' in screen and "Load 10 sample resumes" in screen and reverse("sample_resumes_zip") in screen
+    assert "samples-data" in screen and "priya_nair_data_scientist.pdf" in screen
+    survey = client.get(reverse("survey")).content.decode()
+    assert 'id="load-sample-csv"' in survey and reverse("sample_survey") in survey and "SYNTHETIC" in survey
