@@ -8,7 +8,7 @@ Impact Assessment on HR Recruitment Decision-Making*. It implements the two-trac
   processing time.
 * **Track B, impact on HR decision making:** the HR perception survey (questionnaire + analysis) and a fairness /
   bias audit of Track A's own shortlists.
-* A **Django web UI** (`hrscreen web`) for screening, browsing the results, and the survey; plus a lighter Streamlit demo.
+* A **Django web UI** (`hrscreen web`) for screening, browsing the results, and the survey.
 
 | Proposal item | Where it lives |
 |---|---|
@@ -18,8 +18,7 @@ Impact Assessment on HR Recruitment Decision-Making*. It implements the two-trac
 | Fairness / bias check (disparate impact, name-swap) | `src/hrscreen/fairness/` |
 | Google Form questionnaire + survey analysis | `src/hrscreen/survey/`, `docs/questionnaire.md` |
 | Public datasets (Resume Atlas, Kaggle) | `hrscreen fetch-data` |
-| Web UI (Django, the main interface) | `src/hrscreen/web/` |
-| Lightweight demo (Streamlit) | `src/hrscreen/app/` |
+| Web UI (Django) | `src/hrscreen/web/` |
 | Method details for the report chapters | `docs/METHODOLOGY.md` |
 
 ## Quick start (Windows PowerShell)
@@ -34,7 +33,6 @@ hrscreen benchmark --models rules,tfidf,xgboost       # add embeddings,xgboost+e
 hrscreen fairness --model tfidf
 hrscreen rank --job data-science --resumes path\to\resume_folder
 hrscreen web                                          # the web UI: http://127.0.0.1:8000/
-hrscreen app                                          # lighter Streamlit demo
 ```
 
 Survey workflow:
@@ -183,7 +181,7 @@ src/hrscreen/
   fairness/     outcome audit (four-fifths rule, equal opportunity) and counterfactual name swap
   survey/       questionnaire definition, Google Forms loader, analysis, synthetic responses
   web/          Django web UI (settings, models, views, templates, migrations)
-  app/          Streamlit demo        cli.py  command line
+  cli.py        command line
   resources/    skills.json, jobs.json (edit these)
 kaggle/         bundle builder + offline GPU kernel script
 tests/          pytest suite (python -m pytest -m "not slow")
@@ -194,7 +192,7 @@ results/        committed benchmark and fairness outputs for the real dataset
 ## Tests
 
 ```powershell
-python -m pytest -m "not slow"     # 107 fast tests: parser, extraction, metrics, rankers, benchmark, fairness, survey, CLI, Streamlit app, Django web UI
+python -m pytest -m "not slow"     # fast tests: parser, extraction, metrics, rankers, benchmark, fairness, survey, CLI, Django web UI
 python -m pytest -m slow           # downloads the embedding model once and checks it ranks sensibly
 ```
 

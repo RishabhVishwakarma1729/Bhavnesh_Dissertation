@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import subprocess
-import sys
 from pathlib import Path
 
 import pandas as pd
@@ -169,11 +167,6 @@ def cmd_web(args):
     execute_from_command_line(["hrscreen", "runserver", f"{args.host}:{args.port}", "--noreload"])
 
 
-def cmd_app(args):
-    app = Path(__file__).parent / "app" / "streamlit_app.py"
-    sys.exit(subprocess.call([sys.executable, "-m", "streamlit", "run", str(app), *args.streamlit_args]))
-
-
 # ---------------------------------------------------------------- parser
 
 def add_embedding_options(sub: argparse.ArgumentParser) -> None:
@@ -251,15 +244,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--out", default="results/survey")
     s.set_defaults(func=cmd_survey_analyze)
 
-    s = sub.add_parser("web", help="launch the Django web UI (the main interface)")
+    s = sub.add_parser("web", help="launch the Django web UI")
     s.add_argument("--host", default="127.0.0.1", help="keep 127.0.0.1 so resumes stay on this computer")
     s.add_argument("--port", type=int, default=8000)
     s.add_argument("--debug", action="store_true", help="show error pages with tracebacks")
     s.set_defaults(func=cmd_web)
 
-    s = sub.add_parser("app", help="launch the lightweight Streamlit demo")
-    s.add_argument("streamlit_args", nargs="*", help="extra arguments passed to `streamlit run`")
-    s.set_defaults(func=cmd_app)
     return p
 
 

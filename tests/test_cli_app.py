@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
@@ -46,15 +44,3 @@ def test_cli_missing_dataset_gives_a_helpful_message(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     with pytest.raises(SystemExit, match="fetch-data"):
         main(["benchmark", "--data", "resume-atlas", "--out", str(tmp_path / "x")])
-
-
-def test_streamlit_app_runs_and_ranks_demo_resumes():
-    from streamlit.testing.v1 import AppTest
-
-    app = Path(__file__).parents[1] / "src" / "hrscreen" / "app" / "streamlit_app.py"
-    at = AppTest.from_file(str(app), default_timeout=120).run()
-    assert not at.exception
-    next(b for b in at.button if b.label == "Rank candidates").click().run()
-    assert not at.exception
-    assert len(at.dataframe) >= 1                  # ranking table (and the survey demo tables)
-    assert any("SYNTHETIC" in w.value for w in at.warning)   # demo data is flagged
