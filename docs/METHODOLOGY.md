@@ -52,7 +52,11 @@ judgements, give `hrscreen benchmark --recruiter-labels file.csv` a file with co
 * Metrics are computed per (job, fold) and macro-averaged: Precision@5/10/20, R-precision, nDCG@10,
   MAP, MRR, Spearman and Kendall correlation between score and relevance. Ties are broken at random.
 * Reported as mean +/- standard deviation across folds. Models are compared with a paired Wilcoxon
-  signed-rank test on per-job nDCG@10 (the job is the unit, n = number of jobs).
+  signed-rank test on per-job nDCG@10 (the job is the unit, n = number of jobs), with a Holm adjustment because every
+  pair of models is tested. Quote the Holm p-value (`p_holm`), not the raw one.
+* **Do not rank models by Spearman/Kendall here.** Against a rare binary proxy label these are bounded (about 0.43 even
+  for a perfect ranker) and inflated by tied scores, so a tie-heavy model can beat a better one. They are reported for
+  completeness and are meaningful only against graded recruiter ratings. Use nDCG, MAP and Precision@K.
 * **Duplicates are removed first.** Public resume datasets contain repeated resumes; if a copy sits in both
   the training and the test fold, every metric is inflated. Identical texts with conflicting labels are
   removed entirely. The cleaning report is saved with the results.
@@ -78,8 +82,10 @@ Uses only the Track A system's own outputs on public data, so no real hiring-dec
    deviations, a Wilcoxon test, and how many shortlist decisions flip because of the name alone.
 
 Limits: no protected attribute is observed in the public datasets, so group labels are proxies; names are
-gender-*coded* stimuli, not a determination of anyone's gender; a model that ignores names (TF-IDF) shows exactly
-zero name effect by construction, which is a property of the model, not proof that the pipeline is fair.
+gender-*coded* stimuli, not a determination of anyone's gender. A bag-of-words model such as TF-IDF can only react to a
+name if that name is in its vocabulary, so its name effect is near zero by design; that is a property of the model, not
+proof that the pipeline is fair. A name-swap result also says nothing about other proxies (college, location, hobbies).
+The name audit uses a sample of 400 held-out resumes and its flip counts are small, so treat directions as indicative.
 
 ## 3. Track B: HR perception survey [proposal 2, objective 3]
 

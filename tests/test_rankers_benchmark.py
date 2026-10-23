@@ -91,3 +91,42 @@ def test_embedding_ranker_is_semantic_and_cached(tmp_path):
     assert cache.exists()
     again = EmbeddingRanker(cache_path=cache)
     assert np.allclose(again.score("Data scientist building predictive models", docs), scores, atol=1e-5)
+
+
+def test_compare_models_adds_holm_adjusted_p_values():
+    import pandas as pd
+
+    from hrscreen.evaluation.benchmark import compare_models
+
+    rng = np.random.default_rng(0)
+    jobs_ = [f"j{i}" for i in range(15)]
+    base = rng.uniform(0.4, 0.9, 15)
+    per_job = pd.concat([
+        pd.DataFrame({"model": "a", "job": jobs_, "ndcg@10": base}),
+        pd.DataFrame({"model": "b", "job": jobs_, "ndcg@10": base + rng.normal(0.05, 0.02, 15)}),
+        pd.DataFrame({"model": "c", "job": jobs_, "ndcg@10": base + rng.normal(0.0, 0.02, 15)}),
+    ])
+    out = compare_models(per_job, ["a", "b", "c"])
+    assert len(out) == 3
+    assert (out["p_holm"] >= out["p_value"] - 1e-12).all() and (out["p_holm"] <= 1).all()
+    ab = out[(out.model_a == "a") & (out.model_b == "b")].iloc[0]
+    assert ab["mean_ndcg10_diff (a-b)"] < 0 and ab["p_holm"] < 0.05   # b is clearly better than a
+
+
+def test_benchmark_result_roundtrips_through_disk(resumes, jobs, tmp_path):
+    from hrscreen.evaluation import BenchmarkResult
+
+    result = run_benchmark(resumes, jobs, ["rules", "tfidf"], n_splits=3, timing_sample=20, progress=lambda *_: None)
+    result.save(tmp_path)
+    loaded = BenchmarkResult.load(tmp_path)
+    assert loaded.to_markdown() == result.to_markdown()
+    assert "environment" in loaded.meta and "python" in loaded.meta["environment"]
+    assert "Spearman" in " ".join(loaded.meta["caveats"])            # the rank-correlation warning travels with results
+
+
+def test_cli_accepts_device_and_local_embedding_model_flags():
+    from hrscreen.cli import build_parser
+
+    args = build_parser().parse_args(["benchmark", "--device", "cpu", "--embedding-model", "/some/local/folder"])
+    assert args.device == "cpu" and args.embedding_model == "/some/local/folder"
+    assert build_parser().parse_args(["fairness"]).device == "auto"

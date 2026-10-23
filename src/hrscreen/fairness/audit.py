@@ -23,7 +23,7 @@ import pandas as pd
 from scipy import stats
 
 from ..data.jobs import Job, relevance_matrix
-from ..evaluation.benchmark import df_to_markdown, make_splits
+from ..evaluation.benchmark import df_to_markdown, environment_info, make_splits
 from ..evaluation.metrics import rank_order
 from ..parsing.parser import parse_resume
 from ..ranking import EmbeddingRanker, make_ranker
@@ -192,6 +192,8 @@ class FairnessResult:
             "# Fairness audit",
             f"- Model: **{m['model']}**  |  Resumes: {m['n_resumes']}  |  Jobs: {m['n_jobs']}  |  "
             f"Shortlist: top {m['shortlist_frac']:.0%} per job and fold",
+            "- Data: " + m.get("data_description", "n/a"),
+            "- Environment: " + ", ".join(f"{k} {v}" for k, v in m.get("environment", {}).items()),
             "- Four-fifths rule: the lowest group's selection rate should be at least 80% of the highest group's.",
             "",
             "## Outcome audit by inferred attribute",
@@ -274,6 +276,7 @@ def run_fairness_audit(resumes: pd.DataFrame, jobs: list[Job], model_name: str =
 
     meta = {
         "model": model_name, "n_resumes": len(resumes), "n_jobs": len(jobs), "shortlist_frac": shortlist_frac,
+        "environment": environment_info(embedder),
         "caveats": [
             "Attributes are inferred from resume text (education level, experience band); no protected attribute was observed.",
             "Selection-rate gaps can reflect real differences in qualification; compare them with the equal-opportunity gap.",

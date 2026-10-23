@@ -1,0 +1,2 @@
+model_a,model_b,mean_ndcg10_diff (a-b),n_jobs,p_value,p_holm
+tfidf,embeddings,0.06964207892235767,15,0.03533935546875,0.03533935546875

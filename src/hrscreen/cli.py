@@ -44,12 +44,14 @@ def resolve_data(source: str, sample: int | None, seed: int) -> tuple[pd.DataFra
     return df, report, desc
 
 
-def make_embedder(models: list[str], cache: str | None) -> EmbeddingRanker | None:
+def make_embedder(models: list[str], cache: str | None, device: str = "auto",
+                  model_name: str | None = None) -> EmbeddingRanker | None:
     if not any("emb" in m for m in models):
         return None
     if not embeddings_available():
         raise SystemExit("Embedding models need sentence-transformers:  pip install 'hrscreen[embeddings]'")
-    return EmbeddingRanker(cache_path=cache or "data/cache/embeddings_minilm.npz", verbose=True)
+    kwargs = {"model_name": model_name} if model_name else {}
+    return EmbeddingRanker(cache_path=cache or "data/cache/embeddings_minilm.npz", verbose=True, device=device, **kwargs)
 
 
 # ---------------------------------------------------------------- commands
@@ -78,7 +80,8 @@ def cmd_benchmark(args):
         resumes, relevance = relevance_from_recruiter_labels(args.recruiter_labels, resumes, jobs)
         label_source = f"recruiter ratings from {args.recruiter_labels}"
     result = run_benchmark(resumes, jobs, models, n_splits=args.folds, seed=args.seed,
-                           embedder=make_embedder(models, args.embedding_cache), relevance=relevance,
+                           embedder=make_embedder(models, args.embedding_cache, args.device, args.embedding_model),
+                           relevance=relevance,
                            label_source=label_source, manual_seconds_per_resume=args.manual_seconds)
     result.meta.update(data_description=desc, cleaning=report)
     out = result.save(args.out)
@@ -93,7 +96,7 @@ def cmd_fairness(args):
     resumes, report, desc = resolve_data(args.data, args.sample, args.seed)
     result = run_fairness_audit(resumes, jobs, args.model, n_splits=args.folds, seed=args.seed,
                                 shortlist_frac=args.shortlist_frac,
-                                embedder=make_embedder([args.model], args.embedding_cache),
+                                embedder=make_embedder([args.model], args.embedding_cache, args.device, args.embedding_model),
                                 extra_attributes=tuple(args.attribute or ()))
     result.meta["data_description"] = desc
     result.save(args.out)
@@ -156,6 +159,13 @@ def cmd_app(args):
 
 # ---------------------------------------------------------------- parser
 
+def add_embedding_options(sub: argparse.ArgumentParser) -> None:
+    sub.add_argument("--embedding-cache", help="path of the .npz embedding cache")
+    sub.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda"],
+                     help="where to run the embedding model (auto = GPU if one works)")
+    sub.add_argument("--embedding-model", help="Hugging Face model id or a local model folder (default: all-MiniLM-L6-v2)")
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="hrscreen", description="AI candidate screening + HR impact study toolkit.")
     p.add_argument("--version", action="version", version=f"hrscreen {__version__}")
@@ -181,7 +191,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--jobs", help="custom jobs JSON (same format as the bundled jobs.json)")
     s.add_argument("--recruiter-labels", help="CSV (resume_id, job_id, rating) of human recruiter ratings")
     s.add_argument("--manual-seconds", type=float, help="measured manual screening seconds per resume, to report time saved")
-    s.add_argument("--embedding-cache", help="path of the .npz embedding cache")
+    add_embedding_options(s)
     s.add_argument("--out", default="results/benchmark")
     s.set_defaults(func=cmd_benchmark)
 
@@ -194,7 +204,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--jobs")
     s.add_argument("--shortlist-frac", type=float, default=0.10, help="share of each pool that is shortlisted")
     s.add_argument("--attribute", action="append", help="extra column of the resume CSV to audit (repeatable)")
-    s.add_argument("--embedding-cache")
+    add_embedding_options(s)
     s.add_argument("--out", default="results/fairness")
     s.set_defaults(func=cmd_fairness)
 

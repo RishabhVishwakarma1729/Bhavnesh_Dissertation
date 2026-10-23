@@ -1,0 +1,3 @@
+model,ms_per_resume,resumes_per_second
+tfidf,1.76,568.0
+embeddings,141.14,7.1

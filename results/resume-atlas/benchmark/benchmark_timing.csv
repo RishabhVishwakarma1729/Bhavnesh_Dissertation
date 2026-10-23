@@ -1,0 +1,6 @@
+model,ms_per_resume,resumes_per_second
+rules,2.38,420.3
+tfidf,1.16,863.1
+xgboost,4.0,249.7
+embeddings,5.74,174.3
+xgboost+emb,9.19,108.8

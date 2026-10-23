@@ -45,8 +45,10 @@ class EmbeddingRanker(Ranker):
 
     def __init__(self, model_name: str = DEFAULT_MODEL, chunk_words: int = 160, overlap: int = 40,
                  max_chunks: int = 8, batch_size: int = 32, cache_path: str | Path | None = None,
-                 verbose: bool = False):
-        self.model_name = model_name
+                 verbose: bool = False, device: str = "auto"):
+        self.model_name = model_name  # a Hugging Face model id OR a local folder (for offline machines)
+        self.device = device          # "auto" uses a GPU when one works, otherwise the CPU
+        self.device_used: str | None = None
         self.chunk_words = chunk_words
         self.overlap = overlap
         self.max_chunks = max_chunks
@@ -67,8 +69,21 @@ class EmbeddingRanker(Ranker):
                 raise ImportError(
                     "The embeddings model needs sentence-transformers: pip install 'hrscreen[embeddings]'"
                 ) from exc
-            self._model = SentenceTransformer(self.model_name, device="cpu")
-            self._model.max_seq_length = 256
+            device = self.device
+            if device == "auto":
+                import torch
+
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+            model = SentenceTransformer(self.model_name, device=device)
+            if device != "cpu":
+                try:  # some GPUs are too old for the installed torch build; fall back instead of crashing mid-run
+                    model.encode(["warm-up"], show_progress_bar=False)
+                except Exception as exc:
+                    print(f"GPU unusable ({type(exc).__name__}); falling back to CPU", flush=True)
+                    device = "cpu"
+                    model = SentenceTransformer(self.model_name, device="cpu")
+            model.max_seq_length = 256
+            self._model, self.device_used = model, device
         return self._model
 
     def _key(self, text: str) -> str:
