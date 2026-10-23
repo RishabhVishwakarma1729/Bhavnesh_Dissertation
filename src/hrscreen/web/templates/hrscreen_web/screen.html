@@ -1,0 +1,78 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Screen candidates{% endblock %}
+{% block content %}
+<h1>Screen candidates</h1>
+<p class="lede">Pick a job (or paste your own), add resumes, and choose how to rank them. Contact details are removed before scoring.</p>
+
+{% if error %}<div class="alert bad" role="alert"><strong>Could not rank:</strong> {{ error }}</div>{% endif %}
+
+<form method="post" enctype="multipart/form-data" data-busy="Ranking…" class="stack">
+  {% csrf_token %}
+  <div class="grid two">
+    <section class="card stack" aria-labelledby="h-job">
+      <h2 id="h-job" style="margin:0">1. The job</h2>
+      <div class="field">
+        <label for="job">Job</label>
+        <select id="job" name="job">
+          {% for j in jobs %}<option value="{{ j.id }}" {% if form.job == j.id %}selected{% endif %}>{{ j.title }}</option>{% endfor %}
+          <option value="custom" {% if form.job == 'custom' %}selected{% endif %}>Write my own…</option>
+        </select>
+      </div>
+      <div class="field" id="title-field" {% if form.job != 'custom' %}hidden{% endif %}>
+        <label for="job_title">Job title</label>
+        <input type="text" id="job_title" name="job_title" value="{{ form.job_title|default:'' }}" maxlength="200" placeholder="e.g. Data Analyst">
+      </div>
+      <div class="field">
+        <label for="jd_text">Job description</label>
+        <textarea id="jd_text" name="jd_text" required>{{ form.jd_text|default:'' }}</textarea>
+        <span class="help">The more of the required skills it names, the better the matched / missing skill list.</span>
+      </div>
+    </section>
+
+    <section class="card stack" aria-labelledby="h-res">
+      <h2 id="h-res" style="margin:0">2. The resumes</h2>
+      <div class="field">
+        <label for="resumes">Resume files</label>
+        <input type="file" id="resumes" name="resumes" multiple accept=".pdf,.docx,.txt,.md">
+        <span class="help" id="file-summary">PDF, DOCX or TXT. Up to {{ max_resumes }} files, {{ max_mb }} MB each.</span>
+      </div>
+      <label class="check"><input type="checkbox" name="demo" {% if form.demo %}checked{% endif %}>
+        <span>No files? Use 60 <strong>synthetic</strong> demo resumes<br><span class="help">Generated from templates, not real people.</span></span></label>
+
+      <fieldset style="border:0;padding:0;margin:0" class="stack">
+        <legend class="label" style="padding:0 0 6px">Ranking model</legend>
+        {% for m in models %}
+        <label class="radio-card"><input type="radio" name="model" value="{{ m.value }}" {% if form.model == m.value %}checked{% endif %}>
+          <span><strong>{{ m.label }}</strong><br><span class="help">{{ m.help }}</span></span></label>
+        {% endfor %}
+        <span class="help">Embeddings accept up to {{ max_embedding }} resumes per run.</span>
+      </fieldset>
+    </section>
+  </div>
+  <div><button class="btn primary" type="submit">Rank candidates</button></div>
+</form>
+
+{{ jobs|json_script:"jobs-data" }}
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var jobs = JSON.parse(document.getElementById("jobs-data").textContent);
+    var select = document.getElementById("job"), text = document.getElementById("jd_text"), titleField = document.getElementById("title-field");
+    function sync(overwrite) {
+      var job = jobs.find(function (j) { return j.id === select.value; });
+      titleField.hidden = !!job;
+      if (job && (overwrite || !text.value.trim())) text.value = job.text;
+      if (!job && overwrite) text.value = "";
+    }
+    select.addEventListener("change", function () { sync(true); });
+    sync(false);
+    var files = document.getElementById("resumes"), summary = document.getElementById("file-summary"), original = summary.textContent;
+    files.addEventListener("change", function () {
+      if (!files.files.length) { summary.textContent = original; return; }
+      var bytes = Array.prototype.reduce.call(files.files, function (n, f) { return n + f.size; }, 0);
+      summary.textContent = files.files.length + " file" + (files.files.length === 1 ? "" : "s") + " selected (" + (bytes / 1048576).toFixed(1) + " MB)";
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Runs{% endblock %}
+{% block content %}
+<h1>Runs</h1>
+<p class="lede">Every screening you have done on this computer. A run stores the ranking only, never the resume text.</p>
+{% if runs %}
+<div class="table-wrap"><table>
+  <thead><tr><th>When</th><th>Job</th><th>Model</th><th class="num">Ranked</th><th></th></tr></thead>
+  <tbody>{% for r in runs %}
+    <tr><td>{{ r.created_at|date:"d M Y, H:i" }}</td>
+      <td>{{ r.job_title }}{% if r.is_demo %} <span class="badge warn">synthetic demo</span>{% endif %}</td>
+      <td>{{ r.get_model_label }}</td><td class="num">{{ r.ranked.count }}</td>
+      <td><a href="{% url 'run_detail' r.id %}">Open</a></td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}
+<div class="card"><p>No runs yet.</p><a class="btn primary" href="{% url 'screen' %}">Screen candidates</a></div>
+{% endif %}
+{% endblock %}

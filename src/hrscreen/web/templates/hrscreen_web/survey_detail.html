@@ -1,0 +1,61 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Survey analysis · {{ run.source_name }}{% endblock %}
+{% block content %}
+<div class="row between">
+  <div><h1>Survey analysis</h1><p class="lede" style="margin-bottom:10px">{{ run.source_name }} · {{ run.created_at|date:"d M Y, H:i" }}</p></div>
+  <div class="row">
+    <a class="btn" href="{% url 'survey_file' run.id 'report' %}">Report (.md)</a>
+    <a class="btn" href="{% url 'survey_file' run.id 'scored' %}">Scored data (.csv)</a>
+    <form method="post" action="{% url 'survey_delete' run.id %}" data-confirm="Delete this analysis and its files?">{% csrf_token %}
+      <button class="btn danger" type="submit">Delete</button></form>
+  </div>
+</div>
+
+{% if run.is_synthetic %}<div class="alert bad" role="alert"><strong>SYNTHETIC DATA.</strong> These responses were generated to test the pipeline and relationships were planted on purpose.
+  Do not report any number on this page as a finding.</div>{% endif %}
+
+<div class="kpis"><div class="kpi"><b>{{ run.n_responses }}</b><span>valid responses (target 60–100)</span></div></div>
+{% if r.warnings %}<div class="alert warn"><strong>Check these:</strong><ul>{% for w in r.warnings %}<li>{{ w }}</li>{% endfor %}</ul></div>{% endif %}
+
+<h2>Scales</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Scale</th><th class="num">Items</th><th class="num">n</th><th class="num">Mean</th><th class="num">SD</th><th class="num">Median</th><th class="num">95% CI</th><th class="num">Cronbach's α</th></tr></thead>
+  <tbody>{% for d in r.descriptives %}<tr><td><strong>{{ d.construct }}</strong> <span class="muted">{{ d.label }}</span></td>
+    <td class="num">{{ d.items }}</td><td class="num">{{ d.n }}</td><td class="num">{{ d.mean|floatformat:2 }}</td><td class="num">{{ d.sd|floatformat:2 }}</td>
+    <td class="num">{{ d.median|floatformat:1 }}</td><td class="num">{{ d.ci95_low|floatformat:2 }} – {{ d.ci95_high|floatformat:2 }}</td>
+    <td class="num"><span class="badge {{ d.alpha_class }}">{{ d.cronbach_alpha|floatformat:2|default:"–" }}</span></td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">Scores run 1–5 (reverse-worded items flipped). α of 0.70 or more is conventionally acceptable; the 3-item scales are expected to score lower.</p>
+
+<h2>Figures</h2>
+<div class="grid two">
+  {% for f in figures %}<figure><img src="{% url 'survey_figure' run.id f %}" alt="Survey figure: {{ f }}" loading="lazy"></figure>{% endfor %}
+</div>
+
+{% for reg in r.regressions %}
+<h2>{{ reg.description }}</h2>
+<p class="muted small"><span class="mono">{{ reg.formula }}</span> · n = {{ reg.n }} · R² = {{ reg.r2|floatformat:3 }} (adjusted {{ reg.adj_r2|floatformat:3 }}) · robust (HC3) standard errors</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Term</th><th class="num">Coefficient</th><th class="num">Robust SE</th><th class="num">p</th><th class="num">95% CI</th></tr></thead>
+  <tbody>{% for t in reg.rows %}<tr><td>{{ t.term }}</td><td class="num {% if t.significant %}best{% endif %}">{{ t.coef|floatformat:3 }}</td><td class="num">{{ t.robust_se|floatformat:3 }}</td>
+    <td class="num">{{ t.p_value_text }}</td><td class="num">{{ t.ci95_low|floatformat:2 }} – {{ t.ci95_high|floatformat:2 }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endfor %}
+
+<h2>Strongest correlations</h2>
+{% if r.correlations %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Variable 1</th><th>Variable 2</th><th class="num">Spearman ρ</th><th class="num">p</th><th class="num">p (Holm)</th><th class="num">n</th></tr></thead>
+  <tbody>{% for c in r.correlations %}<tr><td>{{ c.var_1 }}</td><td>{{ c.var_2 }}</td><td class="num">{{ c.spearman_rho|floatformat:3 }}</td>
+    <td class="num">{{ c.p_value_text }}</td><td class="num">{{ c.p_holm_text }}</td><td class="num">{{ c.n }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="muted">Not enough data.</p>{% endif %}
+
+{% if r.group_tests %}
+<h2>Group comparisons</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Comparison</th><th>Scale</th><th>Group sizes</th><th class="num">p</th><th class="num">p (Holm)</th></tr></thead>
+  <tbody>{% for g in r.group_tests %}<tr><td>{{ g.comparison }}</td><td>{{ g.construct }}</td><td>{{ g.group_sizes }}</td><td class="num">{{ g.p_value_text }}</td><td class="num">{{ g.p_holm_text }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% endblock %}

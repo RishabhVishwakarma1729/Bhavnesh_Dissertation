@@ -8,7 +8,7 @@ Impact Assessment on HR Recruitment Decision-Making*. It implements the two-trac
   processing time.
 * **Track B, impact on HR decision making:** the HR perception survey (questionnaire + analysis) and a fairness /
   bias audit of Track A's own shortlists.
-* A Streamlit demo for the viva.
+* A **Django web UI** (`hrscreen web`) for screening, browsing the results, and the survey; plus a lighter Streamlit demo.
 
 | Proposal item | Where it lives |
 |---|---|
@@ -18,7 +18,8 @@ Impact Assessment on HR Recruitment Decision-Making*. It implements the two-trac
 | Fairness / bias check (disparate impact, name-swap) | `src/hrscreen/fairness/` |
 | Google Form questionnaire + survey analysis | `src/hrscreen/survey/`, `docs/questionnaire.md` |
 | Public datasets (Resume Atlas, Kaggle) | `hrscreen fetch-data` |
-| Demo interface (Streamlit) | `src/hrscreen/app/` |
+| Web UI (Django, the main interface) | `src/hrscreen/web/` |
+| Lightweight demo (Streamlit) | `src/hrscreen/app/` |
 | Method details for the report chapters | `docs/METHODOLOGY.md` |
 
 ## Quick start (Windows PowerShell)
@@ -26,13 +27,14 @@ Impact Assessment on HR Recruitment Decision-Making*. It implements the two-trac
 ```powershell
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e ".[embeddings,pdf,dev]"
+pip install -e ".[web,embeddings,pdf,dev]"
 
 hrscreen fetch-data                                   # Resume Atlas -> data/raw/ (not committed)
 hrscreen benchmark --models rules,tfidf,xgboost       # add embeddings,xgboost+emb for the BERT-style models
 hrscreen fairness --model tfidf
 hrscreen rank --job data-science --resumes path\to\resume_folder
-hrscreen app                                          # Streamlit demo
+hrscreen web                                          # the web UI: http://127.0.0.1:8000/
+hrscreen app                                          # lighter Streamlit demo
 ```
 
 Survey workflow:
@@ -44,6 +46,35 @@ hrscreen survey-analyze --csv responses.csv           # Google Forms CSV export 
 
 Every command has `--help`. Without any download you can try everything on **synthetic** data:
 `hrscreen benchmark --data synthetic`, `hrscreen survey-synth --form-style`.
+
+## The web UI
+
+```powershell
+hrscreen web                  # http://127.0.0.1:8000/  (first run creates the local database)
+hrscreen web --debug --port 8610
+```
+
+| Page | What it does |
+|---|---|
+| Screen candidates | Pick one of 15 jobs or write your own, upload PDF / DOCX / TXT resumes, choose TF-IDF, keyword rules or embeddings. Get a ranked list with a score bar, matched and missing skills, years of experience and education. Files that cannot be read are listed with the reason instead of failing the batch. |
+| Runs | History of every screening, downloadable as CSV, deletable. |
+| Benchmark | The saved benchmark: quality bars, all metrics, Holm-adjusted significance tests, per-job heat table, speed, caveats and the environment it ran in. |
+| Fairness | At-a-glance comparison of the audited models plus group tables and the name-swap test. |
+| Survey analysis | Upload the Google Forms CSV (or a clearly stamped SYNTHETIC demo): reliability, regressions, correlations, group tests and figures, with the report and scored data downloadable. |
+| Questionnaire | The 23-item survey, ready to copy into Google Forms. |
+| Method & limits | What a score means and what the results cannot tell you. |
+
+Design choices worth knowing:
+
+* **Privacy.** Resume text is never stored. A run keeps only each candidate's file name, score and parsed attributes; deleting a run
+  removes everything. Uploads are read in memory, size- and count-limited, and only PDF / DOCX / TXT are accepted.
+* **Local only.** The server binds to `127.0.0.1` and has **no login**, so do not expose it on a network or the internet.
+* **No external requests.** All CSS and JavaScript are inline; pages work offline and without JavaScript (the script only
+  pre-fills the job text and shows a busy state).
+* **Accessible and responsive.** Keyboard navigation, visible focus, labelled form fields, automatic dark mode, usable at phone width.
+* Embedding runs are capped at 100 resumes per request because they run on the CPU inside the request.
+* Settings come from environment variables (`HRSCREEN_HOME`, `HRSCREEN_WEB_DATA`, `HRSCREEN_RESULTS`, `HRSCREEN_DEBUG=1`,
+  `DJANGO_SECRET_KEY`); see `src/hrscreen/web/settings.py`. Benchmark and fairness pages read whatever is under `results/`.
 
 ## Results on real data
 
@@ -151,6 +182,7 @@ src/hrscreen/
   evaluation/   ranking metrics and the cross-validated benchmark
   fairness/     outcome audit (four-fifths rule, equal opportunity) and counterfactual name swap
   survey/       questionnaire definition, Google Forms loader, analysis, synthetic responses
+  web/          Django web UI (settings, models, views, templates, migrations)
   app/          Streamlit demo        cli.py  command line
   resources/    skills.json, jobs.json (edit these)
 kaggle/         bundle builder + offline GPU kernel script
@@ -162,7 +194,7 @@ results/        committed benchmark and fairness outputs for the real dataset
 ## Tests
 
 ```powershell
-python -m pytest -m "not slow"     # 68 fast tests: parser, extraction, metrics, rankers, benchmark, fairness, survey, CLI, app
+python -m pytest -m "not slow"     # 107 fast tests: parser, extraction, metrics, rankers, benchmark, fairness, survey, CLI, Streamlit app, Django web UI
 python -m pytest -m slow           # downloads the embedding model once and checks it ranks sensibly
 ```
 

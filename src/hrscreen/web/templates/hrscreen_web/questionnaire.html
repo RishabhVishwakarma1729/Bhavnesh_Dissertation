@@ -1,0 +1,32 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Questionnaire{% endblock %}
+{% block content %}
+<h1>HR perception survey</h1>
+<p class="lede">{{ context_questions|length }} questions about the respondent and {{ n_items }} statements rated on a 5-point scale. Build it in Google Forms, then analyse the
+  export on the <a href="{% url 'survey' %}">Survey analysis</a> page.</p>
+
+<div class="row" style="margin-bottom:18px">
+  <button class="btn primary" type="button" data-copy="qmd">Copy as text</button>
+  <a class="btn" href="{% url 'questionnaire_download' 'md' %}">Download .md</a>
+  <a class="btn" href="{% url 'questionnaire_download' 'csv' %}">Download .csv</a>
+</div>
+
+<div class="alert info"><strong>Setting it up in Google Forms:</strong> create each statement as a <em>Linear scale</em> question (1 = {{ likert.0 }}, 5 = {{ likert.4 }}), required,
+  and use the <strong>exact statement text as the question title</strong>; the analysis matches columns by that text. Check whether your university requires
+  ethics or department approval before collecting responses.</div>
+
+<h2>About the respondent</h2>
+<div class="grid two">
+  {% for cq in context_questions %}<div class="card"><h3 style="margin-top:0">{{ cq.text }}</h3><ul class="tight">{% for o in cq.options %}<li>{{ o }}</li>{% endfor %}</ul></div>{% endfor %}
+</div>
+
+<h2>Statements</h2>
+{% for s in sections %}
+<div class="card" style="margin-bottom:14px">
+  <h3 style="margin-top:0">{{ s.name }} <span class="badge muted">{{ s.code }}</span></h3>
+  <ol class="tight">{% for it in s.items %}<li>{{ it.text }}{% if it.reverse %} <span class="badge warn">reverse-worded</span>{% endif %}</li>{% endfor %}</ol>
+</div>
+{% endfor %}
+
+<details><summary>Plain text to paste</summary><pre class="copybox" id="qmd">{{ markdown }}</pre></details>
+{% endblock %}

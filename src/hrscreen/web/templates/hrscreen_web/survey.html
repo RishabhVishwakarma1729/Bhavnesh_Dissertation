@@ -1,0 +1,31 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Survey analysis{% endblock %}
+{% block content %}
+<h1>Survey analysis</h1>
+<p class="lede">Upload the CSV exported from your Google Form. You get scale reliability, correlations, regressions, group comparisons and figures.
+  Question titles must match the <a href="{% url 'questionnaire' %}">questionnaire</a> exactly.</p>
+
+{% if error %}<div class="alert bad" role="alert"><strong>Could not analyse:</strong> {{ error }}</div>{% endif %}
+
+<form method="post" enctype="multipart/form-data" data-busy="Analysing…" class="card stack" style="max-width:640px">
+  {% csrf_token %}
+  <div class="field">
+    <label for="responses">Google Forms CSV export</label>
+    <input type="file" id="responses" name="responses" accept=".csv,text/csv">
+    <span class="help">Responses are analysed in memory; only the results are saved. Maximum {{ max_mb }} MB.</span>
+  </div>
+  <label class="check"><input type="checkbox" name="demo"><span>No data yet? Analyse 80 <strong>synthetic</strong> demo responses<br>
+    <span class="help">Relationships are planted on purpose to test the pipeline. They are not findings.</span></span></label>
+  <div><button class="btn primary" type="submit">Analyse</button></div>
+</form>
+
+{% if runs %}
+<h2>Earlier analyses</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>When</th><th>Source</th><th class="num">Responses</th><th></th></tr></thead>
+  <tbody>{% for r in runs %}<tr><td>{{ r.created_at|date:"d M Y, H:i" }}</td>
+    <td>{{ r.source_name }}{% if r.is_synthetic %} <span class="badge warn">synthetic</span>{% endif %}</td>
+    <td class="num">{{ r.n_responses }}</td><td><a href="{% url 'survey_detail' r.id %}">Open</a></td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% endblock %}

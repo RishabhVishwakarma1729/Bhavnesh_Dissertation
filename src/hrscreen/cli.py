@@ -152,6 +152,23 @@ def cmd_survey_analyze(args):
     print(f"Saved to {args.out}")
 
 
+def cmd_web(args):
+    import os
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hrscreen.web.settings")
+    if args.debug:
+        os.environ["HRSCREEN_DEBUG"] = "1"   # Django error pages with tracebacks
+    try:
+        import django  # noqa: F401
+    except ImportError:
+        raise SystemExit("The web UI needs Django:  pip install 'hrscreen[web]'")
+    from django.core.management import execute_from_command_line
+
+    execute_from_command_line(["hrscreen", "migrate", "--run-syncdb", "-v", "0"])   # creates the local SQLite file on first run
+    print(f"hrscreen web UI: http://{args.host}:{args.port}/   (Ctrl+C to stop)", flush=True)
+    execute_from_command_line(["hrscreen", "runserver", f"{args.host}:{args.port}", "--noreload"])
+
+
 def cmd_app(args):
     app = Path(__file__).parent / "app" / "streamlit_app.py"
     sys.exit(subprocess.call([sys.executable, "-m", "streamlit", "run", str(app), *args.streamlit_args]))
@@ -234,7 +251,13 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--out", default="results/survey")
     s.set_defaults(func=cmd_survey_analyze)
 
-    s = sub.add_parser("app", help="launch the Streamlit demo")
+    s = sub.add_parser("web", help="launch the Django web UI (the main interface)")
+    s.add_argument("--host", default="127.0.0.1", help="keep 127.0.0.1 so resumes stay on this computer")
+    s.add_argument("--port", type=int, default=8000)
+    s.add_argument("--debug", action="store_true", help="show error pages with tracebacks")
+    s.set_defaults(func=cmd_web)
+
+    s = sub.add_parser("app", help="launch the lightweight Streamlit demo")
     s.add_argument("streamlit_args", nargs="*", help="extra arguments passed to `streamlit run`")
     s.set_defaults(func=cmd_app)
     return p

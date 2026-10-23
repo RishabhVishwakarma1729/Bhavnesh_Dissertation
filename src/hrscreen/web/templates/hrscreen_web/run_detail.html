@@ -1,0 +1,61 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}{{ run.job_title }}{% endblock %}
+{% block content %}
+<div class="row between">
+  <div>
+    <h1>{{ run.job_title }}</h1>
+    <p class="lede" style="margin-bottom:10px">Ranked {{ run.created_at|date:"d M Y, H:i" }} with <strong>{{ run.get_model_label }}</strong>.</p>
+  </div>
+  <div class="row">
+    <a class="btn" href="{% url 'run_csv' run.id %}">Download CSV</a>
+    <form method="post" action="{% url 'run_delete' run.id %}" data-confirm="Delete this run and its ranking?">{% csrf_token %}
+      <button class="btn danger" type="submit">Delete</button></form>
+  </div>
+</div>
+
+{% if run.is_demo %}<div class="alert warn"><strong>Synthetic demo.</strong> These candidates were generated from templates, not real people. Do not read anything into the ranking.</div>{% endif %}
+
+<div class="kpis">
+  <div class="kpi"><b>{{ n_ranked }}</b><span>resumes ranked</span></div>
+  <div class="kpi"><b>{{ n_jd_skills }}</b><span>skills found in the job text</span></div>
+  {% if unreadable %}<div class="kpi"><b>{{ unreadable|length }}</b><span>files not readable</span></div>{% endif %}
+</div>
+{% if shown and n_jd_skills == 0 %}<div class="alert info">No known skills were recognised in this job description, so the matched / missing columns are empty. The score itself still works.</div>{% endif %}
+
+<div class="table-wrap"><table>
+  <caption>Best match first. The bar is relative to the top candidate; the score is a similarity, not a probability.</caption>
+  <thead><tr><th class="num">#</th><th>Candidate</th><th>Match</th><th>Skills in common</th><th class="num">Years</th><th>Education</th></tr></thead>
+  <tbody>
+  {% for c in shown %}
+    <tr>
+      <td class="num rank">{{ c.rank }}</td>
+      <td><strong>{{ c.label }}</strong></td>
+      <td style="min-width:150px"><div class="bar-track" role="img" aria-label="Match {{ c.score|floatformat:3 }}"><div class="bar-fill" style="width:{{ c.width }}%"></div></div>
+        <span class="small muted mono">{{ c.score|floatformat:3 }}</span></td>
+      <td>
+        {% if c.matched_skills %}<div class="chips">{% for s in c.matched_skills|slice:":8" %}<span class="chip have">{{ s }}</span>{% endfor %}{% if c.matched_skills|length > 8 %}<span class="chip">+{{ c.matched_skills|length|add:"-8" }} more</span>{% endif %}</div>{% else %}<span class="muted">none</span>{% endif %}
+        {% if c.missing_skills %}<details><summary class="small muted">Missing {{ c.missing_skills|length }}</summary>
+          <div class="chips">{% for s in c.missing_skills %}<span class="chip miss">{{ s }}</span>{% endfor %}</div></details>{% endif %}
+      </td>
+      <td class="num">{% if c.years_experience is not None %}{{ c.years_experience|floatformat:"-1" }}{% else %}–{% endif %}</td>
+      <td>{{ c.education_level|default:"–" }}</td>
+    </tr>
+  {% empty %}<tr><td colspan="6" class="muted">No readable resumes in this run.</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+
+{% if not show_all %}
+<p><a href="?top=all">Show all {{ n_ranked }} candidates</a></p>
+{% elif n_ranked > 25 %}
+<p><a href="?top=25">Show only the top 25</a></p>
+{% endif %}
+<p class="small muted">Experience and education are read from the text with simple rules and can be wrong; check the original resume.</p>
+
+{% if unreadable %}
+<h2>Files that could not be ranked</h2>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Reason</th></tr></thead>
+  <tbody>{% for c in unreadable %}<tr><td>{{ c.label }}</td><td>{{ c.error }}</td></tr>{% endfor %}</tbody></table></div>
+{% endif %}
+
+<details style="margin-top:28px"><summary>Job description used</summary><pre class="copybox">{{ run.jd_text }}</pre></details>
+{% endblock %}

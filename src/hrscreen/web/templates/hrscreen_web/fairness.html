@@ -1,0 +1,47 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Fairness audit{% endblock %}
+{% block content %}
+<h1>Fairness audit</h1>
+<p class="lede">Does the system shortlist some groups of candidates less often, and does a name alone change a decision?
+  The audit uses the system's own shortlists (top 10% per job) on a public dataset.</p>
+
+{% if not audits %}
+<div class="card stack"><p><strong>No fairness audits found</strong> in <span class="mono">results/</span>.</p>
+  <p class="muted">Create one with <span class="mono">hrscreen fairness --data resume-atlas --model tfidf</span>.</p></div>
+{% else %}
+<div class="alert warn"><strong>How to read this.</strong> No protected attribute exists in the public data, so groups are inferred from the resume text
+  (education level, experience band) and names are gender-<em>coded</em> test inputs, not a determination of anyone's gender.
+  A gap in selection rate can reflect real differences in qualification; the <strong>equal-opportunity gap</strong>
+  (how often truly relevant candidates are shortlisted, per group) is the fairer yardstick.</div>
+
+<h2>At a glance</h2>
+<div class="table-wrap"><table class="wrap">
+  <thead><tr><th>Model</th><th class="num">Education: lowest ÷ highest selection rate</th><th class="num">Education: equal-opportunity gap</th>
+    <th class="num">Experience: lowest ÷ highest</th><th>Name swap</th></tr></thead>
+  <tbody>{% for g in glance %}<tr>
+    <td><strong>{{ g.model }}</strong></td>
+    <td class="num">{% if g.education %}{{ g.education.min_impact_ratio|floatformat:3 }} <span class="badge {{ g.education.pass_class }}">{% if g.education.four_fifths_pass %}passes{% else %}fails{% endif %} 4/5</span>{% else %}–{% endif %}</td>
+    <td class="num">{% if g.education %}{{ g.education.equal_opportunity_gap|floatformat:2 }}{% else %}–{% endif %}</td>
+    <td class="num">{% if g.experience %}{{ g.experience.min_impact_ratio|floatformat:3 }} <span class="badge {{ g.experience.pass_class }}">{% if g.experience.four_fifths_pass %}passes{% else %}fails{% endif %} 4/5</span>{% else %}–{% endif %}</td>
+    <td class="small">{% if g.name_swap %}{{ g.name_swap.diff }} SD <span class="muted">(p {{ g.name_swap.p }})</span><br>
+      {{ g.name_swap.flip_pct }}% of decisions flip:<br>{{ g.name_swap.female }} favour female-coded, {{ g.name_swap.male }} male-coded
+      {% else %}{% for line in g.name_audit|slice:"1:" %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% empty %}–{% endfor %}{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">Four-fifths rule: the lowest group's selection rate should be at least 80% (0.80) of the highest group's.</p>
+
+{% for a in audits %}
+<h2>{{ a.model }}</h2>
+{% for attr in a.attributes %}
+<h3>By {{ attr.name|cut:"_level"|cut:"_band" }}</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Group</th><th class="num">Resumes</th><th class="num">Selection rate</th><th class="num">Ratio to highest</th><th class="num">Relevant candidates shortlisted</th></tr></thead>
+  <tbody>{% for g in attr.groups %}<tr><td>{{ g.group }}</td><td class="num">{{ g.n_resumes }}</td>
+    <td class="num">{{ g.selection_rate|floatformat:3 }}</td><td class="num">{{ g.impact_ratio_vs_highest|floatformat:2 }}</td>
+    <td class="num">{{ g.equal_opportunity_tpr|floatformat:3 }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endfor %}
+{% if a.name_audit %}<h3>Name-swap test</h3><ul class="tight">{% for line in a.name_audit %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+{% endfor %}
+{% endif %}
+{% endblock %}

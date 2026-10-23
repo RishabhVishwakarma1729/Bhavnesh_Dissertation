@@ -1,0 +1,58 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<h1>AI-assisted candidate screening</h1>
+<p class="lede">Rank resumes against a job, see how each ranking model performs on a public dataset, audit the shortlists for bias,
+  and analyse the HR perception survey. Everything runs on this computer.</p>
+
+<div class="grid three">
+  <a class="card link" href="{% url 'screen' %}">
+    <h3>Screen candidates</h3>
+    <p>Upload resumes (PDF, DOCX or TXT) and a job description. Get a ranked shortlist with matched and missing skills.</p>
+    <span class="badge info">{{ n_runs }} run{{ n_runs|pluralize }} so far</span>
+  </a>
+  <a class="card link" href="{% url 'benchmark' %}">
+    <h3>Benchmark</h3>
+    <p>Precision@K, nDCG and MAP for the keyword, TF-IDF, embedding and XGBoost models, with significance tests.</p>
+    {% if has_benchmark %}<span class="badge ok">Results available</span>{% else %}<span class="badge muted">No results yet</span>{% endif %}
+  </a>
+  <a class="card link" href="{% url 'fairness' %}">
+    <h3>Fairness audit</h3>
+    <p>Four-fifths rule, equal opportunity and a counterfactual name-swap test on the system's own shortlists.</p>
+    {% if has_fairness %}<span class="badge ok">Results available</span>{% else %}<span class="badge muted">No results yet</span>{% endif %}
+  </a>
+  <a class="card link" href="{% url 'survey' %}">
+    <h3>Survey analysis</h3>
+    <p>Upload the Google Forms export: scale reliability, correlations, regressions and figures.</p>
+    <span class="badge info">{{ n_surveys }} analys{{ n_surveys|pluralize:"is,es" }}</span>
+  </a>
+  <a class="card link" href="{% url 'questionnaire' %}">
+    <h3>Questionnaire</h3>
+    <p>The 23-item survey, ready to copy into Google Forms.</p>
+  </a>
+  <a class="card link" href="{% url 'about' %}">
+    <h3>Method &amp; limits</h3>
+    <p>How scores are produced and what they can and cannot tell you.</p>
+  </a>
+</div>
+
+<h2>Read this before relying on a result</h2>
+<div class="alert warn">
+  <ul class="tight">
+    <li>A score is a <strong>similarity</strong>, not a verdict about a person. A human should review every shortlist.</li>
+    <li>Benchmark "relevance" is a <strong>proxy</strong> (a resume's dataset category matching the job), not a recruiter's judgement.</li>
+    <li>Survey pages show <strong>synthetic</strong> data until you upload real responses. Synthetic output is never a finding.</li>
+  </ul>
+</div>
+
+{% if recent_runs %}
+<h2>Recent runs</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Job</th><th>Model</th><th>When</th><th></th></tr></thead>
+  <tbody>{% for r in recent_runs %}
+    <tr><td>{{ r.job_title }}{% if r.is_demo %} <span class="badge warn">synthetic demo</span>{% endif %}</td><td>{{ r.model }}</td>
+      <td>{{ r.created_at|date:"d M Y, H:i" }}</td><td><a href="{% url 'run_detail' r.id %}">Open</a></td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% endif %}
+{% endblock %}

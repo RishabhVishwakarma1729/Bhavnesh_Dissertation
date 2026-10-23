@@ -1,0 +1,85 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Benchmark{% endblock %}
+{% block content %}
+<h1>Benchmark</h1>
+<p class="lede">How well each ranking model puts the right candidates first, measured with cross-validation: every model is trained on some
+  resumes and graded on resumes it has never seen.</p>
+
+{% if not chosen %}
+<div class="card stack">
+  <p><strong>No benchmark results found</strong> in <span class="mono">results/</span>.</p>
+  <p class="muted">Create them with <span class="mono">hrscreen benchmark --data resume-atlas</span> (see the README for the GPU/Kaggle route).</p>
+</div>
+{% else %}
+{% if sets|length > 1 %}
+<form method="get" class="row" style="margin-bottom:18px">
+  <label for="set">Result set</label>
+  <select id="set" name="set" style="width:auto" onchange="this.form.submit()">{% for s in sets %}<option value="{{ s }}" {% if s == chosen %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+  <noscript><button class="btn" type="submit">Show</button></noscript>
+</form>
+{% endif %}
+
+<div class="kpis">
+  <div class="kpi"><b>{{ meta.n_resumes }}</b><span>resumes</span></div>
+  <div class="kpi"><b>{{ meta.n_jobs }}</b><span>jobs</span></div>
+  <div class="kpi"><b>{{ meta.n_splits }}</b><span>cross-validation folds</span></div>
+  <div class="kpi"><b>{{ model_names|length }}</b><span>models</span></div>
+</div>
+<div class="alert info"><strong>Ground truth:</strong> {{ meta.label_source }}. A resume counts as relevant when its dataset category matches the job,
+  so this measures agreement with dataset labels, not with a recruiter. {{ meta.data_description }}</div>
+
+<h2>Ranking quality</h2>
+<div class="card">
+  <div class="stack">
+    {% for b in bars %}
+    <div class="bar-row">
+      <strong>{{ b.model }}</strong>
+      <div>
+        <div class="bar-track" role="img" aria-label="{{ b.model }} nDCG@10 {{ b.ndcg }} percent"><div class="bar-fill" style="width:{{ b.ndcg }}%"></div></div>
+        <div class="bar-track" style="height:8px;margin-top:4px" role="img" aria-label="{{ b.model }} MAP {{ b.map }} percent"><div class="bar-fill alt" style="width:{{ b.map }}%"></div></div>
+      </div>
+      <div class="small mono nums">nDCG {{ b.ndcg }} · <span class="muted">MAP {{ b.map }}</span></div>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="help" style="margin-top:14px">Thick bar: nDCG@10 (how well the top of the list is ordered). Thin bar: MAP (ordering over the whole list). Higher is better.</p>
+</div>
+
+<h2>All metrics <span class="small muted">(mean ± sd across folds; best in bold)</span></h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Model</th>{% for l in metric_labels %}<th class="num">{{ l }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for r in rows %}<tr><td><strong>{{ r.model }}</strong></td>{% for c in r.cells %}<td class="num {% if c.best %}best{% endif %}">{{ c.text }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">Rank correlation (Spearman / Kendall) is left out on purpose: against a rare yes/no label it is capped and inflated by tied scores, so it can favour a worse model.</p>
+
+<h2>Are the differences real?</h2>
+<p class="muted">Paired Wilcoxon test over the {{ meta.n_jobs }} jobs on nDCG@10. {% if has_holm %}With {{ comparisons|length }} pairs compared, quote the <strong>adjusted</strong> p-value (Holm).{% else %}These p-values are not adjusted for the number of pairs compared.{% endif %}</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Model A</th><th>Model B</th><th class="num">nDCG@10 difference (A − B)</th><th class="num">p</th>{% if has_holm %}<th class="num">p adjusted</th>{% endif %}<th>Verdict</th></tr></thead>
+  <tbody>{% for c in comparisons %}<tr>
+    <td>{{ c.model_a }}</td><td>{{ c.model_b }}</td><td class="num">{{ c.diff|floatformat:3 }}</td>
+    <td class="num">{{ c.p_value_text }}</td>{% if has_holm %}<td class="num">{{ c.p_holm_text }}</td>{% endif %}
+    <td>{% if c.significant %}<span class="badge ok">significant</span>{% else %}<span class="badge muted">not significant</span>{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>nDCG@10 by job</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Job</th>{% for m in model_names %}<th class="num">{{ m }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for j in by_job %}<tr><td>{{ j.job }}</td>{% for c in j.cells %}<td class="heat" style="--a:{{ c.alpha }}">{{ c.value|floatformat:2 }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>Speed</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Model</th><th class="num">ms per resume</th><th class="num">resumes per second</th></tr></thead>
+  <tbody>{% for t in timing %}<tr><td>{{ t.model }}</td><td class="num">{{ t.ms_per_resume }}</td><td class="num">{{ t.resumes_per_second }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">Cold-start parse and score of one resume for one job, on the device listed below. A GPU makes the embedding models look much faster than a CPU would.</p>
+
+<h2>Caveats and provenance</h2>
+<ul class="tight">{% for c in meta.caveats %}<li>{{ c }}</li>{% endfor %}</ul>
+{% if meta.cleaning %}<p class="small muted">Data cleaning: {{ meta.cleaning.n_input }} resumes in, {{ meta.cleaning.removed_exact_duplicates }} duplicates,
+  {{ meta.cleaning.removed_conflicting_labels }} conflicting-label copies and {{ meta.cleaning.removed_too_short }} near-empty removed, {{ meta.cleaning.n_output }} kept.</p>{% endif %}
+{% if meta.environment %}<details><summary class="small">Environment</summary>
+  <ul class="tight small mono">{% for k, v in meta.environment.items %}<li>{{ k }}: {{ v }}</li>{% endfor %}</ul></details>{% endif %}
+{% endif %}
+{% endblock %}

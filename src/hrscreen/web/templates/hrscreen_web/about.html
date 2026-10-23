@@ -1,0 +1,41 @@
+{% extends "hrscreen_web/base.html" %}
+{% block title %}Method &amp; limits{% endblock %}
+{% block content %}
+<h1>Method &amp; limits</h1>
+<p class="lede">What happens to a resume, how the models differ, and what the results cannot tell you.</p>
+
+<div class="grid two">
+  <section class="card">
+    <h3>What happens to a resume</h3>
+    <ol class="tight">
+      <li>Text is extracted from the PDF, DOCX or TXT file.</li>
+      <li>Emails, phone numbers and web links are removed so they cannot influence the score.</li>
+      <li>Skills (from a 380-skill list), years of experience and education level are read with simple rules.</li>
+      <li>The model scores the resume against the job description; resumes are sorted by score.</li>
+      <li>The ranking, not the resume text, is saved.</li>
+    </ol>
+  </section>
+  <section class="card">
+    <h3>The models</h3>
+    <ul class="tight">
+      <li><strong>Keyword rules</strong>: share of the job's skills the resume mentions. The ATS-style baseline.</li>
+      <li><strong>TF-IDF</strong>: weights words that are distinctive to the job; cosine similarity.</li>
+      <li><strong>Embeddings</strong>: a pre-trained language model (MiniLM) compares meaning, in chunks.</li>
+      <li><strong>XGBoost</strong>: learns from labelled pairs; used in the benchmark, not in this screening form.</li>
+    </ul>
+  </section>
+</div>
+
+<h2>What the results cannot tell you</h2>
+<div class="alert warn"><ul class="tight">
+  <li><strong>The benchmark's ground truth is a proxy.</strong> A resume is "relevant" when its dataset category matches the job. That measures agreement with labels, not with a recruiter, and related categories (a Python developer is a fine data-scientist candidate) count as misses.</li>
+  <li><strong>Experience and education are guesses</strong> from text patterns and can be wrong or missing.</li>
+  <li><strong>The fairness audit has no protected attributes.</strong> It infers education and experience groups from text and uses gender-coded names as a probe. It cannot show discrimination against real protected groups.</li>
+  <li><strong>Rank-correlation numbers are not used to compare models</strong> because a rare yes/no label caps them and ties inflate them.</li>
+  <li><strong>The job descriptions and skill list are small and editable.</strong> Results depend on them.</li>
+  <li><strong>A shortlist is advice, not a decision.</strong> Keep a person responsible for every hiring decision.</li>
+</ul></div>
+
+<h2>Where to read more</h2>
+<p>The full method, formulas and evaluation protocol are in <span class="mono">docs/METHODOLOGY.md</span> in the repository.</p>
+{% endblock %}

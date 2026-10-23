@@ -27,7 +27,9 @@ dependencies = [
 embeddings = ["sentence-transformers>=2.7"]
 # better PDF text extraction (falls back to pypdf when missing)
 pdf = ["pdfplumber>=0.10"]
-dev = ["pytest>=7"]
+# Django web UI (the main interface)
+web = ["django>=5.2"]
+dev = ["pytest>=7", "pytest-django>=4.8", "django>=5.2"]
 
 [project.scripts]
 hrscreen = "hrscreen.cli:main"
@@ -36,10 +38,12 @@ hrscreen = "hrscreen.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-hrscreen = ["resources/*.json"]
+hrscreen = ["resources/*.json", "web/templates/hrscreen_web/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]
+DJANGO_SETTINGS_MODULE = "settings_test"
 markers = [
     "slow: needs a model download or a long run (deselect with -m 'not slow')",
 ]
