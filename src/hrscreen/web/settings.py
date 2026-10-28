@@ -8,6 +8,8 @@ and behind a server:
 * ``HRSCREEN_RESULTS``   folder of saved benchmark / fairness results (default: <home>/results)
 * ``HRSCREEN_DEBUG=1``   show Django error pages with tracebacks
 * ``DJANGO_SECRET_KEY``  override the auto-generated secret key
+* ``HRSCREEN_ALLOWED_HOSTS`` / ``HRSCREEN_CSRF_TRUSTED_ORIGINS``  extra comma-separated hosts / https origins when the
+  app sits behind a proxy (GitHub Codespaces is detected automatically)
 """
 
 import os
@@ -33,6 +35,17 @@ def _secret_key() -> str:
 SECRET_KEY = _secret_key()
 DEBUG = os.environ.get("HRSCREEN_DEBUG") == "1"
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "testserver", *filter(None, os.environ.get("HRSCREEN_ALLOWED_HOSTS", "").split(","))]
+CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("HRSCREEN_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+
+# GitHub Codespaces serves a forwarded port as https://<codespace>-<port>.app.github.dev through a proxy, so Django must
+# accept that host name, trust its https origin for form posts, and read the real host/scheme from the proxy's headers.
+# (Forwarded ports are private to you by default; keep it that way, because this app has no login.)
+if os.environ.get("CODESPACES") == "true":
+    _forward_domain = os.environ.get("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "app.github.dev")
+    ALLOWED_HOSTS.append("." + _forward_domain)
+    CSRF_TRUSTED_ORIGINS.append("https://*." + _forward_domain)
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = ["django.contrib.messages", "hrscreen.web"]
 MIDDLEWARE = [

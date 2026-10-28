@@ -392,3 +392,50 @@ def test_upload_pages_offer_the_sample_controls(client):
     assert "samples-data" in screen and "priya_nair_data_scientist.pdf" in screen
     survey = client.get(reverse("survey")).content.decode()
     assert 'id="load-sample-csv"' in survey and reverse("sample_survey") in survey and "SYNTHETIC" in survey
+
+
+# ------------------------------------------------------------------ GitHub Codespaces / proxy settings
+
+def _load_settings(monkeypatch, tmp_path, **env):
+    import runpy
+
+    monkeypatch.setenv("HRSCREEN_WEB_DATA", str(tmp_path))
+    for key in ("CODESPACES", "GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "HRSCREEN_ALLOWED_HOSTS", "HRSCREEN_CSRF_TRUSTED_ORIGINS"):
+        monkeypatch.delenv(key, raising=False)
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
+    return runpy.run_module("hrscreen.web.settings", run_name="settings_probe")   # evaluates the settings file fresh
+
+
+def test_settings_are_local_only_by_default(monkeypatch, tmp_path):
+    s = _load_settings(monkeypatch, tmp_path)
+    assert s["ALLOWED_HOSTS"] == ["localhost", "127.0.0.1", "[::1]", "testserver"]
+    assert s["CSRF_TRUSTED_ORIGINS"] == [] and "USE_X_FORWARDED_HOST" not in s
+
+
+def test_settings_accept_the_codespaces_forwarded_url(monkeypatch, tmp_path):
+    s = _load_settings(monkeypatch, tmp_path, CODESPACES="true", GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN="app.github.dev")
+    assert ".app.github.dev" in s["ALLOWED_HOSTS"] and "https://*.app.github.dev" in s["CSRF_TRUSTED_ORIGINS"]
+    assert s["USE_X_FORWARDED_HOST"] is True and s["SECURE_PROXY_SSL_HEADER"] == ("HTTP_X_FORWARDED_PROTO", "https")
+
+
+def test_extra_hosts_and_origins_can_be_added_by_environment(monkeypatch, tmp_path):
+    s = _load_settings(monkeypatch, tmp_path, HRSCREEN_ALLOWED_HOSTS="a.example.com,b.example.com", HRSCREEN_CSRF_TRUSTED_ORIGINS="https://a.example.com")
+    assert {"a.example.com", "b.example.com"} <= set(s["ALLOWED_HOSTS"]) and s["CSRF_TRUSTED_ORIGINS"] == ["https://a.example.com"]
+
+
+def test_a_codespaces_style_request_and_form_post_work_through_the_proxy(client, settings):
+    """Host header from the forwarded URL, https via the proxy header, and a cross-site-looking Origin on a POST."""
+    settings.ALLOWED_HOSTS = [".app.github.dev"]
+    settings.CSRF_TRUSTED_ORIGINS = ["https://*.app.github.dev"]
+    settings.USE_X_FORWARDED_HOST = True
+    settings.SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    host = "my-codespace-8000.app.github.dev"
+    assert Client().get("/", HTTP_X_FORWARDED_HOST=host, HTTP_X_FORWARDED_PROTO="https", HTTP_HOST="localhost:8000").status_code == 200
+    strict = Client(enforce_csrf_checks=True)
+    page = strict.get("/screen/", HTTP_X_FORWARDED_HOST=host, HTTP_X_FORWARDED_PROTO="https", HTTP_HOST="localhost:8000")
+    token = page.cookies["csrftoken"].value
+    response = strict.post("/screen/", {"job": JD.id, "jd_text": JD.text, "model": "tfidf", "demo": "on", "csrfmiddlewaretoken": token},
+                           HTTP_X_FORWARDED_HOST=host, HTTP_X_FORWARDED_PROTO="https", HTTP_HOST="localhost:8000",
+                           HTTP_ORIGIN="https://" + host, HTTP_REFERER=f"https://{host}/screen/")
+    assert response.status_code == 302                                   # accepted, then redirected to the run page

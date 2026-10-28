@@ -45,6 +45,36 @@ hrscreen survey-analyze --csv responses.csv           # Google Forms CSV export 
 Every command has `--help`. Without any download you can try everything on **synthetic** data:
 `hrscreen benchmark --data synthetic`, `hrscreen survey-synth --form-style`.
 
+## Linux, macOS and GitHub Codespaces
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[web,pdf,dev]"            # add ",embeddings" only if you want the sentence-embedding models (large, see below)
+hrscreen benchmark --models rules,tfidf,xgboost --sample 3000     # quick run on the shipped dataset
+hrscreen web                                # http://127.0.0.1:8000/
+python -m pytest -m "not slow"
+```
+
+**Codespaces:** *Code > Codespaces > Create codespace on main.* The `.devcontainer/` folder installs everything (a few minutes). Then run
+`hrscreen web` and open the forwarded port **8000** (the Ports tab or the pop-up). The host and CSRF settings for the forwarded
+`*.app.github.dev` address are handled automatically. **Keep the port Private** (the default): the app has no login.
+
+What it needs (measured on a clean install with the newest package versions of October 2026, Python 3.12):
+
+| | Amount |
+|---|---|
+| Repository clone | about 70 MB (53 MB of it is the dataset) |
+| Python packages without embeddings | about 630 MB |
+| Adding the `embeddings` extra | PyTorch plus transformers: several GB on Linux, because the default wheel bundles CUDA. For CPU only, run `pip install torch --index-url https://download.pytorch.org/whl/cpu` first |
+| Memory, classical models on all 11,901 resumes | about 0.3-0.6 GB observed |
+| Time, `rules` + `tfidf` + `xgboost`, full data | about 20 minutes on a laptop CPU |
+| Time, embedding models, full data | over an hour on a CPU, so use `--sample` or the Kaggle GPU runner below |
+
+GitHub's free plan includes 120 core-hours and 15 GB-months of Codespaces storage a month
+([details](https://docs.github.com/en/billing/concepts/product-billing/github-codespaces)); a 2-core codespace uses 2 core-hours per hour, so
+the full classical benchmark costs under 1 core-hour. Without the extras, 3 tests are skipped (two need PyMuPDF to build test PDFs, one needs
+sentence-transformers).
+
 ## The web UI
 
 ```powershell
