@@ -191,6 +191,10 @@ Fairness audit (top 10% shortlisted per job; `results/resume-atlas/fairness_*`):
    only reaches about 0.43 and tied scores inflate the value (the keyword baseline "wins" that column). Use nDCG, MAP and
    P@K. Rank correlation is only meaningful against graded recruiter ratings.
 8. Precision@K depends on pool size and on how many resumes are relevant, so compare models within one run only.
+9. **Re-running on another machine.** The folds, the data and the keyword baseline reproduce exactly (I re-ran `rules` on a laptop and it
+   matched the published per-fold and per-job numbers bit for bit). TF-IDF-based numbers can differ in the third decimal between library
+   versions: my laptop gave mean nDCG@10 0.8780 for `tfidf` against 0.8773 in the published Kaggle run (scikit-learn 1.5.1 against 1.6.1;
+   I did not isolate the cause). Quote the committed results, and treat differences of that size as noise.
 
 ## Running on Kaggle (GPU)
 
@@ -245,6 +249,13 @@ clone can run `hrscreen benchmark` straight away. It is an **unmodified** copy o
 [`ahmedheakl/resume-atlas`](https://huggingface.co/datasets/ahmedheakl/resume-atlas), checked byte-for-byte, and is listed as MIT-licensed on
 its dataset card. Source, licence, checksum and the original paper (please cite it) are in `data/raw/resume-atlas/SOURCE.md`.
 The file name `train.csv` is the dataset's own; this project makes its own cross-validation folds.
+
+**Where is `test.csv`?** There isn't one: the upstream dataset ships a single file, and the benchmark uses stratified 5-fold
+cross-validation instead of one fixed split, so every resume lands in a test set exactly once. The exact folds are committed in
+`results/resume-atlas/splits/fold_assignments.csv` (columns `resume_id, category, fold`; fold *k* is the test set of run *k* and the other
+four folds are its training set; `R00042` means the 0-based row 42 of `train.csv`). To get real files, run
+`hrscreen export-splits --materialize data/splits`, which writes `fold_0/train.csv`, `fold_0/test.csv`, `fold_1/...` with the full text.
+Those are git-ignored because they are large copies of the same data.
 
 Things to know about it:
 

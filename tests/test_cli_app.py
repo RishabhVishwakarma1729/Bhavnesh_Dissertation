@@ -44,3 +44,31 @@ def test_cli_missing_dataset_gives_a_helpful_message(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     with pytest.raises(SystemExit, match="fetch-data"):
         main(["benchmark", "--data", "resume-atlas", "--out", str(tmp_path / "x")])
+
+
+def test_export_splits_gives_every_resume_exactly_one_test_fold_and_is_stratified(tmp_path):
+    from hrscreen.cli import resolve_data
+    from hrscreen.evaluation import make_splits
+
+    main(["export-splits", "--data", "synthetic", "--folds", "4", "--seed", "3", "--out", str(tmp_path)])
+    table = pd.read_csv(tmp_path / "fold_assignments.csv")
+    assert len(table) == 600 and table["resume_id"].is_unique and set(table["fold"]) == {0, 1, 2, 3}
+    spread = table.groupby(["category", "fold"]).size().unstack(fill_value=0)
+    assert (spread.max(axis=1) - spread.min(axis=1)).max() <= 1          # every category is spread evenly over the folds
+    resumes, _, _ = resolve_data("synthetic", None, 3)
+    for k, (_, test_idx) in enumerate(make_splits(resumes, 4, 3)):         # identical to what the benchmark uses
+        assert set(table.loc[table["fold"] == k, "resume_id"]) == set(resumes.loc[test_idx, "resume_id"])
+    meta = (tmp_path / "splits_meta.json").read_text(encoding="utf-8")
+    assert '"n_folds": 4' in meta and "scikit_learn" in meta
+
+
+def test_export_splits_can_write_train_and_test_files_per_fold(tmp_path):
+    main(["export-splits", "--data", "synthetic", "--folds", "3", "--out", str(tmp_path / "a"), "--materialize", str(tmp_path / "folds")])
+    table = pd.read_csv(tmp_path / "a" / "fold_assignments.csv")
+    for k in range(3):
+        train = pd.read_csv(tmp_path / "folds" / f"fold_{k}" / "train.csv")
+        test = pd.read_csv(tmp_path / "folds" / f"fold_{k}" / "test.csv")
+        assert not set(train["resume_id"]) & set(test["resume_id"])                       # no leakage
+        assert len(train) + len(test) == len(table)                                       # together they are everything
+        assert set(test["resume_id"]) == set(table.loc[table["fold"] == k, "resume_id"])
+        assert {"resume_id", "category", "text"} <= set(test.columns)

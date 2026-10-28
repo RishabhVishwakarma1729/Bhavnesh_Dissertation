@@ -47,7 +47,8 @@ judgements, give `hrscreen benchmark --recruiter-labels file.csv` a file with co
 
 ### 1.5 Evaluation protocol (`hrscreen.evaluation`)
 
-* Stratified 5-fold cross-validation over resumes (stratified by category). A model is fitted on four
+* Stratified 5-fold cross-validation over resumes (stratified by category; seed 42). `hrscreen export-splits` writes the exact folds:
+  `results/resume-atlas/splits/fold_assignments.csv` is committed, and `--materialize DIR` writes full-text `fold_k/train.csv` and `fold_k/test.csv`. A model is fitted on four
   folds and ranks the held-out fold for every job, so it never sees what it is graded on.
 * Metrics are computed per (job, fold) and macro-averaged: Precision@5/10/20, R-precision, nDCG@10,
   MAP, MRR, Spearman and Kendall correlation between score and relevance. Ties are broken at random.

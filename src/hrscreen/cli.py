@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from . import __version__
@@ -65,6 +67,42 @@ def cmd_synth_resumes(args):
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(args.out, index=False)
     print(f"Wrote {len(df)} SYNTHETIC resumes to {args.out}")
+
+
+def cmd_export_splits(args):
+    """Write the exact train/test split the benchmark uses (stratified k-fold), so it can be inspected and cited."""
+    import sklearn
+
+    from .evaluation import make_splits
+
+    resumes, report, desc = resolve_data(args.data, None, args.seed)
+    folds = make_splits(resumes, args.folds, args.seed)
+    fold_of = np.full(len(resumes), -1)
+    for k, (_, test_idx) in enumerate(folds):
+        fold_of[test_idx] = k                       # each resume is in the TEST set of exactly one fold
+    table = pd.DataFrame({"resume_id": resumes["resume_id"].to_numpy(), "fold": fold_of})
+    if "category" in resumes.columns:
+        table.insert(1, "category", resumes["category"].to_numpy())
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    table.to_csv(out / "fold_assignments.csv", index=False)
+    (out / "splits_meta.json").write_text(json.dumps({
+        "data": desc, "cleaning": report, "n_resumes": len(resumes), "n_folds": args.folds, "seed": args.seed,
+        "method": "StratifiedKFold(shuffle=True) on category (rare categories pooled), KFold when unlabelled",
+        "scikit_learn": sklearn.__version__,
+        "how_to_read": "fold k = the test set of run k; the other folds are its training set. resume_id R<row> is the 0-based row of the original CSV.",
+    }, indent=2), encoding="utf-8")
+    print(f"Wrote {out / 'fold_assignments.csv'}: {len(table)} resumes, test-set sizes per fold {np.bincount(fold_of).tolist()}")
+
+    if args.materialize:
+        root = Path(args.materialize)
+        for k in range(args.folds):
+            (root / f"fold_{k}").mkdir(parents=True, exist_ok=True)
+            is_test = fold_of == k
+            resumes.loc[~is_test].to_csv(root / f"fold_{k}" / "train.csv", index=False)
+            resumes.loc[is_test].to_csv(root / f"fold_{k}" / "test.csv", index=False)
+        print(f"Wrote fold_0 ... fold_{args.folds - 1} (train.csv + test.csv with the full text) under {root}")
 
 
 def cmd_benchmark(args):
@@ -191,6 +229,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--seed", type=int, default=0)
     s.add_argument("--out", default="data/synthetic/resumes.csv")
     s.set_defaults(func=cmd_synth_resumes)
+
+    s = sub.add_parser("export-splits", help="write the exact train/test folds the benchmark uses")
+    s.add_argument("--data", default="resume-atlas", help=data_help)
+    s.add_argument("--folds", type=int, default=5)
+    s.add_argument("--seed", type=int, default=42)
+    s.add_argument("--out", default="results/resume-atlas/splits", help="folder for fold_assignments.csv (small; safe to commit)")
+    s.add_argument("--materialize", metavar="DIR", help="also write fold_k/train.csv and fold_k/test.csv with the full text (large)")
+    s.set_defaults(func=cmd_export_splits)
 
     s = sub.add_parser("benchmark", help="cross-validated comparison of ranking models")
     s.add_argument("--data", default="resume-atlas", help=data_help)

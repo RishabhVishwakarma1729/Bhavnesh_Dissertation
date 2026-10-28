@@ -1,0 +1,16 @@
+{
+  "data": "resume-atlas (MIT (per the dataset card on Hugging Face))",
+  "cleaning": {
+    "n_input": 13389,
+    "removed_too_short": 15,
+    "removed_conflicting_labels": 381,
+    "removed_exact_duplicates": 1092,
+    "n_output": 11901
+  },
+  "n_resumes": 11901,
+  "n_folds": 5,
+  "seed": 42,
+  "method": "StratifiedKFold(shuffle=True) on category (rare categories pooled), KFold when unlabelled",
+  "scikit_learn": "1.5.1",
+  "how_to_read": "fold k = the test set of run k; the other folds are its training set. resume_id R<row> is the 0-based row of the original CSV."
+}
