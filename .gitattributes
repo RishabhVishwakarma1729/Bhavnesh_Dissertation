@@ -1,0 +1,2 @@
+# keep the dataset byte-for-byte as published: no line-ending conversion on Windows checkouts
+data/raw/resume-atlas/* -text
