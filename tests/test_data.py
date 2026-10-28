@@ -64,3 +64,20 @@ def test_recruiter_labels_keep_only_rated_resumes(tmp_path):
 def test_synthetic_resumes_are_flagged_and_cover_all_jobs(resumes, jobs):
     assert resumes["is_synthetic"].all()
     assert (relevance_matrix(jobs, resumes["category"]).sum(axis=1) > 0).all()
+
+
+def test_committed_resume_atlas_is_intact_and_cleans_to_the_benchmark_corpus():
+    """The shipped dataset must be the unmodified upstream file, and cleaning it must give the corpus the results were computed on."""
+    import hashlib
+    from pathlib import Path
+
+    from hrscreen.data.fetch import DATASETS, dataset_csv
+    from hrscreen.data import load_resumes_csv
+
+    path = dataset_csv("resume-atlas", Path(__file__).parents[1] / "data" / "raw")
+    if not path.exists():
+        pytest.skip("Resume Atlas not present")
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == "c71b0d6d88e75412aefb3998d289e4af8d9c07a9b26e8a974d6a2bac485480c2"
+    spec = DATASETS["resume-atlas"]
+    df, report = load_resumes_csv(path, text_col=spec["text_col"], label_col=spec["label_col"])
+    assert report["n_input"] == 13389 and report["n_output"] == 11901 and df["category"].nunique() == 43

@@ -8,8 +8,13 @@ __pycache__/
 build/
 dist/
 
-# downloaded / generated data (never committed: third-party licences, size, regenerable)
-data/
+# data/ is ignored (web database, secret key, embedding cache, synthetic files, other downloads)
+# EXCEPT the public Resume Atlas dataset (MIT licence), kept at data/raw/resume-atlas/
+data/*
+!data/raw/
+data/raw/*
+!data/raw/resume-atlas/
+data/raw/resume-atlas/.cache/
 models_cache/
 *.log
 

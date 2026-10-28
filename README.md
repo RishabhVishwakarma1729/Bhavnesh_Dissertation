@@ -17,7 +17,7 @@ Impact Assessment on HR Recruitment Decision-Making*. It implements the two-trac
 | Precision@K, ranking correlation, processing time | `src/hrscreen/evaluation/` |
 | Fairness / bias check (disparate impact, name-swap) | `src/hrscreen/fairness/` |
 | Google Form questionnaire + survey analysis | `src/hrscreen/survey/`, `docs/questionnaire.md` |
-| Public datasets (Resume Atlas, Kaggle) | `hrscreen fetch-data` |
+| Public dataset (Resume Atlas, included) and a Kaggle loader | `data/raw/resume-atlas/`, `hrscreen fetch-data` |
 | Web UI (Django) | `src/hrscreen/web/` |
 | Method details for the report chapters | `docs/METHODOLOGY.md` |
 
@@ -28,7 +28,7 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -e ".[web,embeddings,pdf,dev]"
 
-hrscreen fetch-data                                   # Resume Atlas -> data/raw/ (not committed)
+hrscreen fetch-data                                   # Resume Atlas is already in data/raw/, so nothing is downloaded
 hrscreen benchmark --models rules,tfidf,xgboost       # add embeddings,xgboost+emb for the BERT-style models
 hrscreen fairness --model tfidf
 hrscreen rank --job data-science --resumes path\to\resume_folder
@@ -210,7 +210,18 @@ python -m pytest -m slow           # downloads the embedding model once and chec
 
 ## Data and licences
 
-Datasets are downloaded to `data/` on your machine and never committed. Resume Atlas
-(`ahmedheakl/resume-atlas`, 13,389 resumes in 43 categories) is listed as MIT-licensed on its Hugging Face dataset
-card; check the licence of any other dataset before redistributing it. Resumes in public datasets can contain
-personal details, so the pipeline redacts emails, phone numbers and URLs before scoring.
+The repository includes the **Resume Atlas** dataset at `data/raw/resume-atlas/train.csv` (13,389 resumes in 43 categories, 53 MB) so a
+clone can run `hrscreen benchmark` straight away. It is an **unmodified** copy of the Hugging Face file
+[`ahmedheakl/resume-atlas`](https://huggingface.co/datasets/ahmedheakl/resume-atlas), checked byte-for-byte, and is listed as MIT-licensed on
+its dataset card. Source, licence, checksum and the original paper (please cite it) are in `data/raw/resume-atlas/SOURCE.md`.
+The file name `train.csv` is the dataset's own; this project makes its own cross-validation folds.
+
+Things to know about it:
+
+* **It may contain personal data.** A read-only scan found no email addresses, and much of the text is template content (about 60% of
+  resumes carry the fictional `555` phone range), but about 16% contain a 10-digit number and about 10% a street address, and the names
+  cannot be proven fictional. The pipeline removes emails, phone numbers and web links before scoring; the file itself is not redacted.
+* **If you commercialise this software, do not ship the dataset with it.** Keep it a separate download and check that the dataset authors
+  could licence the underlying resume text.
+* Everything else under `data/` (web database, secret key, embedding cache, synthetic files, other downloads) is git-ignored. Check the licence
+  of any other dataset before adding or redistributing it.
